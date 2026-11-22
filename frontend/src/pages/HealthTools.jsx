@@ -10,7 +10,7 @@ import {
   AlertCircle 
 } from 'lucide-react';
 
-const HealthTools = () => {
+const HealthTools = ({ setActivePage }) => {
   const [activeTool, setActiveTool] = useState('bmi'); // 'bmi' | 'bp' | 'water'
 
   // BMI State

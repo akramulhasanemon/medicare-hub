@@ -34,7 +34,7 @@ import {
   User
 } from 'lucide-react';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ setActivePage }) => {
   const { user } = useAuth();
   const { 
     appointments, 

@@ -3,7 +3,7 @@ import DoctorCard from '../components/DoctorCard';
 import { useData } from '../context/DataContext';
 import { Search, Filter, Stethoscope } from 'lucide-react';
 
-const Doctors = () => {
+const Doctors = ({ setActivePage }) => {
   const { doctors, departments } = useData();
   const [selectedDeptId, setSelectedDeptId] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
