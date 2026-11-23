@@ -41,6 +41,7 @@ const AccountsPortal = ({ setActivePage }) => {
     labBookings, 
     pharmacyOrders, 
     doctors, 
+    labEmployees,
     accountsStaff,
     prescriptions, 
     getNextTestNumber 
