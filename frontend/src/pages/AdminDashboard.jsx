@@ -499,22 +499,19 @@ const AdminDashboard = ({ setActivePage }) => {
               onClick={() => setIsAddDoctorModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-purple-600/30 transition-all text-xs"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Doctor (D10X)
               <Plus className="w-3.5 h-3.5" /> Add Doctor ({getNextDoctorCode()})
             </button>
             <button
               onClick={() => setIsAddLabModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition-all text-xs"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Lab Staff (L10X)
               <Plus className="w-3.5 h-3.5" /> Add Lab Staff ({getNextLabCode()})
             </button>
             <button
               onClick={() => setIsAddAccountsModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30 transition-all text-xs"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Account (A10X)
-              <Plus className="w-3.5 h-3.5" /> Add Account ({getNextAccountsCode()})
+              <Plus className="w-3.5 h-3.5" /> Add Account Employee ({getNextAccountsCode()})
             </button>
             <button
               onClick={() => setIsAddPatientModalOpen(true)}
@@ -674,7 +671,7 @@ const AdminDashboard = ({ setActivePage }) => {
             Lab Employees ({labEmployees.length})
           </button>
 
-          {/* New Tab 2: Accounts Section */}
+          {/* Tab: Accounts Section (হিসাব ও রাজস্ব লেজার) */}
           <button
             onClick={() => setActiveTab('accounts_section')}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'accounts_section'
@@ -682,8 +679,20 @@ const AdminDashboard = ({ setActivePage }) => {
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
           >
-            <Landmark className="w-4 h-4" />
-            Accounts Section ({accountsStaff.length})
+            <DollarSign className="w-4 h-4 text-emerald-400" />
+            Accounts & Billing ({allInvoices.length} Vouchers)
+          </button>
+
+          {/* Tab: Account Employees (অ্যাকাউন্ট কর্মকর্তা তালিকা ও যোগ) */}
+          <button
+            onClick={() => setActiveTab('account_employees')}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'account_employees'
+              ? 'bg-emerald-700 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+          >
+            <Landmark className="w-4 h-4 text-emerald-300" />
+            Account Employees ({accountsStaff.length})
           </button>
         </div>
 
@@ -1439,96 +1448,98 @@ const AdminDashboard = ({ setActivePage }) => {
               </div>
             </div>
 
-            {/* SECTION 3: ACCOUNTS OFFICERS DIRECTORY & STAFF MANAGEMENT */}
-            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-slate-900">Hospital Accounts Officers Roster</h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                      ID Prefix: A101+
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    Admin can Add and Delete account officers. Each staff member gets an auto-incremented ID (e.g. A101, A102...) to login.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsAddAccountsModalOpen(true)}
-                  className="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
-                >
-                  <UserPlus className="w-4 h-4" /> Add Account Officer ({getNextAccountsCode()})
-                </button>
-              </div>
+          </div>
+        )}
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
-                      <th className="py-3 px-4">Account ID</th>
-                      <th className="py-3 px-4">Staff Name & Designation</th>
-                      <th className="py-3 px-4">Contact Info</th>
-                      <th className="py-3 px-4">Assigned Section</th>
-                      <th className="py-3 px-4 text-center">Status</th>
-                      <th className="py-3 px-4 text-right">Delete Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {accountsStaff.length > 0 ? (
-                      accountsStaff.map(staff => (
-                        <tr key={staff.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-3.5 px-4">
-                            <span className="font-mono font-black text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs">
-                              {staff.account_code}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span className="font-bold text-slate-900 block text-sm">{staff.name}</span>
-                            <span className="text-slate-500 text-[11px]">{staff.designation}</span>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span className="flex items-center gap-1.5 text-slate-700">
-                              <Mail className="w-3 h-3 text-slate-400" /> {staff.email}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-slate-500 text-[11px]">
-                              <Phone className="w-3 h-3 text-slate-400" /> {staff.phone}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4 font-medium text-slate-700">
-                            {staff.section}
-                          </td>
-                          <td className="py-3.5 px-4 text-center">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                              Active
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <button
-                              onClick={() => {
-                                if (window.confirm(`Are you sure you want to remove Account Officer ${staff.name} (${staff.account_code})?`)) {
-                                  deleteAccountsStaff(staff.id);
-                                }
-                              }}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-colors text-xs"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Delete</span>
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="6" className="py-8 text-center text-slate-400">
-                          No accounts staff registered yet. Click "Add Account Officer" to create one.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+        {/* TAB 8: Account Employees Management with A101, A102, Add & Delete */}
+        {activeTab === 'account_employees' && (
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-slate-900">Hospital Accounts Officers Roster</h3>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                    ID Prefix: A101+
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Admin can Add and Delete account officers. Each staff member gets an auto-incremented ID (e.g. A101, A102...) to login.
+                </p>
               </div>
+              <button
+                onClick={() => setIsAddAccountsModalOpen(true)}
+                className="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
+              >
+                <UserPlus className="w-4 h-4" /> Add Account Employee ({getNextAccountsCode()})
+              </button>
             </div>
 
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
+                    <th className="py-3 px-4">Account ID</th>
+                    <th className="py-3 px-4">Staff Name & Designation</th>
+                    <th className="py-3 px-4">Contact Info</th>
+                    <th className="py-3 px-4">Assigned Section</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-right">Delete Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {accountsStaff.length > 0 ? (
+                    accountsStaff.map(staff => (
+                      <tr key={staff.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3.5 px-4">
+                          <span className="font-mono font-black text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs">
+                            {staff.account_code}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="font-bold text-slate-900 block text-sm">{staff.name}</span>
+                          <span className="text-slate-500 text-[11px]">{staff.designation}</span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="flex items-center gap-1.5 text-slate-700">
+                            <Mail className="w-3 h-3 text-slate-400" /> {staff.email}
+                          </span>
+                          <span className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                            <Phone className="w-3 h-3 text-slate-400" /> {staff.phone}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-slate-700">
+                          {staff.section}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            Active
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <button
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to remove Account Officer ${staff.name} (${staff.account_code})?`)) {
+                                deleteAccountsStaff(staff.id);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-colors text-xs"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="py-8 text-center text-slate-400">
+                        No accounts staff registered yet. Click "Add Account Employee" to create one.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
