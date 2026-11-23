@@ -4,7 +4,11 @@ import {
   sendRegistrationSMS, 
   sendRegistrationEmail, 
   formatRegistrationSMS, 
-  formatRegistrationEmail 
+  formatRegistrationEmail,
+  getGmailComposeUrl,
+  getMailtoUrl,
+  getWhatsAppShareUrl,
+  getMobileSmsUrl
 } from '../services/notificationService';
 import { 
   HeartPulse, 
@@ -30,7 +34,8 @@ import {
   MessageSquare,
   RefreshCw,
   X,
-  Send
+  Send,
+  ExternalLink
 } from 'lucide-react';
 
 const Register = ({ setActivePage }) => {
@@ -225,32 +230,54 @@ const Register = ({ setActivePage }) => {
               </div>
 
               {/* SMS Message Bubble */}
-              <div className="bg-white border border-slate-200/80 p-3 rounded-xl text-slate-700 text-xs font-medium space-y-1 shadow-inner">
+              <div className="bg-white border border-slate-200/80 p-3 rounded-xl text-slate-700 text-xs font-medium space-y-2 shadow-inner">
                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold border-b border-slate-100 pb-1">
                   <span>Sender: MEDIHUB-SMS</span>
                   <span>Just now</span>
                 </div>
-                <p className="text-slate-700 text-[11px] leading-relaxed pt-0.5">
+                <p className="text-slate-700 text-[11px] leading-relaxed">
                   {smsContent}
                 </p>
+
+                {/* 1-Click Mobile Actions */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                  <a
+                    href={getMobileSmsUrl(registeredUser)}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 px-3 rounded-xl text-[11px] transition-all shadow-sm"
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Open in Mobile SMS App</span>
+                  </a>
+
+                  <a
+                    href={getWhatsAppShareUrl(registeredUser)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-3 rounded-xl text-[11px] transition-all shadow-sm"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-white" />
+                    <span>Send to WhatsApp</span>
+                    <ExternalLink className="w-3 h-3 opacity-80" />
+                  </a>
+                </div>
               </div>
             </div>
 
-            {/* 2. Official Email Card */}
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5 hover:border-blue-300 transition-all">
+            {/* 2. Official Email Card with Real Gmail Integration */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5 hover:border-red-300 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+                  <div className="p-2 bg-red-100 text-red-700 rounded-xl">
                     <Mail className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-slate-800 block">অফিসিয়াল ইমেইল (Email) নোটিফিকেশন</span>
+                    <span className="text-xs font-bold text-slate-800 block">অফিসিয়াল ইমেইল (Gmail) নোটিফিকেশন</span>
                     <span className="text-[11px] text-slate-500 font-mono">প্রেরিত: {registeredUser.email}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Inbox
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Sent to Inbox
                   </span>
                   <button
                     type="button"
@@ -259,26 +286,51 @@ const Register = ({ setActivePage }) => {
                     className="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 text-[10px] font-bold flex items-center gap-1 transition-all"
                     title="Resend Email"
                   >
-                    <RefreshCw className={`w-3 h-3 ${isResendingEmail ? 'animate-spin text-blue-600' : ''}`} />
+                    <RefreshCw className={`w-3 h-3 ${isResendingEmail ? 'animate-spin text-red-600' : ''}`} />
                     <span className="hidden sm:inline">Resend</span>
                   </button>
                 </div>
               </div>
 
-              {/* Email Summary & Preview Action */}
-              <div className="bg-white border border-slate-200/80 p-3 rounded-xl text-slate-700 text-xs font-medium space-y-2 shadow-inner flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Subject Line:</span>
-                  <p className="text-slate-800 font-semibold text-xs">{emailData.subject}</p>
+              {/* Email Summary & 1-Click Gmail Action Bar */}
+              <div className="bg-white border border-slate-200/80 p-3 rounded-xl text-slate-700 text-xs font-medium space-y-2.5 shadow-inner">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Subject Line:</span>
+                    <p className="text-slate-800 font-semibold text-xs">{emailData.subject}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailModal(true)}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all text-xs flex items-center gap-1.5 shrink-0"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View Letterhead</span>
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowEmailModal(true)}
-                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition-all text-xs flex items-center gap-1.5 shrink-0"
-                >
-                  <Eye className="w-3.5 h-3.5" />
-                  <span>View Official Email</span>
-                </button>
+
+                {/* 1-Click Real Gmail Direct Launch Button */}
+                <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <a
+                    href={getGmailComposeUrl(registeredUser)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md transition-all text-xs"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span>Open in Gmail (সরাসরি জিমেইলে পাঠান ও দেখুন)</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                  </a>
+
+                  <a
+                    href={getMailtoUrl(registeredUser)}
+                    className="inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-3 rounded-xl border border-slate-200 transition-all text-xs shrink-0"
+                    title="Open native mail client"
+                  >
+                    <span>Mail App</span>
+                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>

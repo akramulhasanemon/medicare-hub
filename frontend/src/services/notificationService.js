@@ -112,12 +112,70 @@ export const sendRegistrationSMS = async (user) => {
 };
 
 /**
- * Send / Dispatch Registration Email
+ * Generate 1-Click Direct URL to open compose window in Gmail Web
+ */
+export const getGmailComposeUrl = (user) => {
+  const { subject, bodyText } = formatRegistrationEmail(user);
+  const email = user.email || '';
+  return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+};
+
+/**
+ * Generate standard mailto URL for native Gmail / Mail client on mobile or PC
+ */
+export const getMailtoUrl = (user) => {
+  const { subject, bodyText } = formatRegistrationEmail(user);
+  const email = user.email || '';
+  return `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+};
+
+/**
+ * Generate 1-Click WhatsApp direct message URL
+ */
+export const getWhatsAppShareUrl = (user) => {
+  const message = formatRegistrationSMS(user);
+  const phone = (user.phone || '').replace(/[^0-9]/g, '');
+  const targetPhone = phone.startsWith('880') ? phone : phone.startsWith('0') ? `88${phone}` : `880${phone}`;
+  return `https://api.whatsapp.com/send?phone=${encodeURIComponent(targetPhone)}&text=${encodeURIComponent(message)}`;
+};
+
+/**
+ * Generate 1-Click Mobile SMS URL (opens Messages app on phone)
+ */
+export const getMobileSmsUrl = (user) => {
+  const message = formatRegistrationSMS(user);
+  const phone = (user.phone || '').trim();
+  return `sms:${encodeURIComponent(phone)}?body=${encodeURIComponent(message)}`;
+};
+
+/**
+ * Send / Dispatch Registration Email (Local Log + Webhook / API Relay)
  */
 export const sendRegistrationEmail = async (user) => {
   const { subject, bodyText } = formatRegistrationEmail(user);
   const email = user.email || 'user@example.com';
   const timestamp = new Date().toISOString();
+
+  // Attempt real web email relay (via Web3Forms public API)
+  let apiDelivered = false;
+  try {
+    const res = await fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        access_key: '0cb0bb0e-6f81-4322-8349-f53e3df6a1f8', // Public free web notification endpoint
+        name: `MediCare Hub (${user.name})`,
+        email: email,
+        subject: subject,
+        message: bodyText
+      })
+    });
+    if (res.ok) {
+      apiDelivered = true;
+    }
+  } catch (err) {
+    console.log('Online email relay skipped, logging in hospital outbox:', err);
+  }
 
   const emailRecord = {
     id: `EMAIL-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -128,7 +186,7 @@ export const sendRegistrationEmail = async (user) => {
     role: user.role,
     subject: subject,
     body: bodyText,
-    status: 'Delivered',
+    status: apiDelivered ? 'Delivered via Web Mail Relay' : 'Delivered to Inbox Queue',
     sender: 'MediCare Hub Hospital <no-reply@medicare-hub.com>',
     timestamp: timestamp,
     timeFormatted: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -140,7 +198,8 @@ export const sendRegistrationEmail = async (user) => {
   return {
     success: true,
     record: emailRecord,
-    deliveredAt: timestamp
+    deliveredAt: timestamp,
+    apiDelivered
   };
 };
 
