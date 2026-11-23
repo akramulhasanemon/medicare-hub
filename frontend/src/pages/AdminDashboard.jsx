@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { 
-  Users, 
-  UserCheck, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Plus, 
-  Search, 
-  Filter, 
-  ShieldAlert, 
-  Stethoscope, 
+import {
+  Users,
+  UserCheck,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Plus,
+  Search,
+  Filter,
+  ShieldAlert,
+  Stethoscope,
   AlertCircle,
   FileCheck,
   Building2,
@@ -31,16 +31,21 @@ import {
   BadgePercent,
   Droplet,
   MapPin,
-  User
+  User,
+  Printer,
+  Eye,
+  Receipt,
+  CreditCard,
+  X
 } from 'lucide-react';
 
 const AdminDashboard = ({ setActivePage }) => {
   const { user } = useAuth();
-  const { 
-    appointments, 
-    updateAppointmentStatus, 
-    doctors, 
-    departments, 
+  const {
+    appointments,
+    updateAppointmentStatus,
+    doctors,
+    departments,
     addDoctor,
     deleteDoctor,
     getNextDoctorCode,
@@ -93,7 +98,7 @@ const AdminDashboard = ({ setActivePage }) => {
   const [activeTab, setActiveTab] = useState('appointments'); // 'appointments' | 'doctors' | 'pharmacy' | 'lab' | 'ambulance' | 'lab_employees' | 'accounts_section'
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Note editing state for an appointment
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [customNote, setCustomNote] = useState('');
@@ -104,71 +109,10 @@ const AdminDashboard = ({ setActivePage }) => {
   const [isAddAccountsModalOpen, setIsAddAccountsModalOpen] = useState(false);
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
 
-  // Accounts & Vouchers Section State
+  // Accounts Section Audit & View State
   const [adminViewingReceipt, setAdminViewingReceipt] = useState(null);
   const [accountsFilterStaff, setAccountsFilterStaff] = useState('ALL');
   const [accountsSearchQuery, setAccountsSearchQuery] = useState('');
-
-  // Accounts Revenue Calculations & Groupings
-  const allInvoices = invoices || [];
-  const grandAccountsRevenue = allInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
-
-  // Group by Cashier Staff Code (A101, A102, A103)
-  const staffMap = {};
-  (accountsStaff || []).forEach(staff => {
-    const code = staff.account_code || `A${staff.id}`;
-    staffMap[code] = {
-      ...staff,
-      code,
-      totalCollected: 0,
-      invoiceCount: 0,
-      cashTotal: 0,
-      digitalTotal: 0,
-      invoices: []
-    };
-  });
-
-  allInvoices.forEach(inv => {
-    const code = inv.cashier_code || 'A101';
-    if (!staffMap[code]) {
-      staffMap[code] = {
-        code,
-        name: inv.cashier_name || 'Cashier Counter',
-        designation: 'Accounts Officer',
-        totalCollected: 0,
-        invoiceCount: 0,
-        cashTotal: 0,
-        digitalTotal: 0,
-        invoices: []
-      };
-    }
-    const amt = Number(inv.total_amount) || 0;
-    staffMap[code].totalCollected += amt;
-    staffMap[code].invoiceCount += 1;
-    staffMap[code].invoices.push(inv);
-    if (/cash/i.test(inv.payment_method || '')) {
-      staffMap[code].cashTotal += amt;
-    } else {
-      staffMap[code].digitalTotal += amt;
-    }
-  });
-
-  const staffCollectionList = Object.values(staffMap);
-
-  const filteredAccountsInvoices = allInvoices.filter(inv => {
-    const matchesFilter = accountsFilterStaff === 'ALL' || (inv.cashier_code && inv.cashier_code.toUpperCase() === accountsFilterStaff.toUpperCase());
-    if (!matchesFilter) return false;
-    if (!accountsSearchQuery.trim()) return true;
-    const q = accountsSearchQuery.trim().toUpperCase();
-    return (
-      (inv.invoice_code && inv.invoice_code.toUpperCase().includes(q)) ||
-      (inv.cashier_code && inv.cashier_code.toUpperCase().includes(q)) ||
-      (inv.cashier_name && inv.cashier_name.toUpperCase().includes(q)) ||
-      (inv.patient_id && inv.patient_id.toUpperCase().includes(q)) ||
-      (inv.patient_name && inv.patient_name.toUpperCase().includes(q)) ||
-      (inv.payment_method && inv.payment_method.toUpperCase().includes(q))
-    );
-  });
 
   // Patients Directory State across database & registered users
   const getRegisteredPatients = () => {
@@ -350,7 +294,7 @@ const AdminDashboard = ({ setActivePage }) => {
   const totalAppointments = appointments.length;
   const pendingAppointments = appointments.filter(a => a.status === 'pending');
   const confirmedAppointments = appointments.filter(a => a.status === 'confirmed');
-  
+
   const totalPharmacySales = pharmacyOrders.reduce((sum, o) => sum + (o.total_amount || o.totalAmount || 0), 0);
   const totalLabRevenue = labBookings.reduce((sum, l) => sum + (l.price || 0), 0);
   const totalDoctorRevenue = appointments
@@ -361,6 +305,90 @@ const AdminDashboard = ({ setActivePage }) => {
     }, 0);
 
   const grandRevenue = totalDoctorRevenue + totalPharmacySales + totalLabRevenue;
+
+  // Accounts Section Financial Intelligence (কার আইডি থেকে কত টাকা আসলো এবং মোট কত টাকা)
+  const allInvoices = invoices || [];
+  const grandAccountsRevenue = allInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+
+  // Group by Cashier Staff ID (Staff Collection Audit)
+  const staffCollectionList = (accountsStaff || []).map(staff => {
+    const code = (staff.account_code || `A${staff.id}`).toUpperCase();
+    const staffInvoices = allInvoices.filter(inv => {
+      const invCashier = (inv.cashier_code || '').toUpperCase();
+      const invName = (inv.cashier_name || '').toLowerCase();
+      return invCashier === code || (staff.name && invName === staff.name.toLowerCase());
+    });
+    const totalCollected = staffInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+    const cashTotal = staffInvoices.filter(i => /cash/i.test(i.payment_method || '')).reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+    const digitalTotal = totalCollected - cashTotal;
+    return {
+      ...staff,
+      code,
+      totalCollected,
+      invoiceCount: staffInvoices.length,
+      cashTotal,
+      digitalTotal,
+      invoices: staffInvoices
+    };
+  });
+
+  allInvoices.forEach(inv => {
+    const code = (inv.cashier_code || 'A101').toUpperCase();
+    if (!staffCollectionList.some(s => s.code === code)) {
+      const staffInvoices = allInvoices.filter(i => (i.cashier_code || '').toUpperCase() === code);
+      const total = staffInvoices.reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0);
+      staffCollectionList.push({
+        id: code,
+        code,
+        name: inv.cashier_name || 'Accounts Cashier',
+        designation: 'Counter Billing Officer',
+        section: 'OPD Billing Counter',
+        phone: '01700000000',
+        email: `${code.toLowerCase()}@medicare.com`,
+        totalCollected: total,
+        invoiceCount: staffInvoices.length,
+        cashTotal: staffInvoices.filter(i => /cash/i.test(i.payment_method || '')).reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0),
+        digitalTotal: total - staffInvoices.filter(i => /cash/i.test(i.payment_method || '')).reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0),
+        invoices: staffInvoices
+      });
+    }
+  });
+
+  // Group by Patient ID (রোগী আইডি অনুযায়ী আদায়কৃত টাকা)
+  const patientPaymentsMap = {};
+  allInvoices.forEach(inv => {
+    const pId = (inv.patient_id || 'P01').toUpperCase();
+    if (!patientPaymentsMap[pId]) {
+      patientPaymentsMap[pId] = {
+        patient_id: pId,
+        patient_name: inv.patient_name || 'Patient',
+        patient_phone: inv.patient_phone || '',
+        totalPaid: 0,
+        invoiceCount: 0,
+        invoices: []
+      };
+    }
+    patientPaymentsMap[pId].totalPaid += (Number(inv.total_amount) || 0);
+    patientPaymentsMap[pId].invoiceCount += 1;
+    patientPaymentsMap[pId].invoices.push(inv);
+  });
+  const patientPaymentsList = Object.values(patientPaymentsMap);
+
+  // Filtered invoices for ledger table
+  const filteredAccountsInvoices = allInvoices.filter(inv => {
+    const q = accountsSearchQuery.trim().toUpperCase();
+    const matchesFilter = accountsFilterStaff === 'ALL' || (inv.cashier_code && inv.cashier_code.toUpperCase() === accountsFilterStaff.toUpperCase());
+    if (!matchesFilter) return false;
+    if (!q) return true;
+    return (
+      (inv.invoice_code && inv.invoice_code.toUpperCase().includes(q)) ||
+      (inv.cashier_code && inv.cashier_code.toUpperCase().includes(q)) ||
+      (inv.cashier_name && inv.cashier_name.toUpperCase().includes(q)) ||
+      (inv.patient_id && inv.patient_id.toUpperCase().includes(q)) ||
+      (inv.patient_name && inv.patient_name.toUpperCase().includes(q)) ||
+      (inv.payment_method && inv.payment_method.toUpperCase().includes(q))
+    );
+  });
 
   // Filtered Appointments
   const filteredAppointments = appointments.filter(app => {
@@ -448,7 +476,7 @@ const AdminDashboard = ({ setActivePage }) => {
   return (
     <div className="py-10 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
+
         {/* Admin Header */}
         <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1.5">
@@ -471,18 +499,21 @@ const AdminDashboard = ({ setActivePage }) => {
               onClick={() => setIsAddDoctorModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-purple-600/30 transition-all text-xs"
             >
+              <Plus className="w-3.5 h-3.5" /> Add Doctor (D10X)
               <Plus className="w-3.5 h-3.5" /> Add Doctor ({getNextDoctorCode()})
             </button>
             <button
               onClick={() => setIsAddLabModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition-all text-xs"
             >
+              <Plus className="w-3.5 h-3.5" /> Add Lab Staff (L10X)
               <Plus className="w-3.5 h-3.5" /> Add Lab Staff ({getNextLabCode()})
             </button>
             <button
               onClick={() => setIsAddAccountsModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30 transition-all text-xs"
             >
+              <Plus className="w-3.5 h-3.5" /> Add Account (A10X)
               <Plus className="w-3.5 h-3.5" /> Add Account ({getNextAccountsCode()})
             </button>
             <button
@@ -567,11 +598,10 @@ const AdminDashboard = ({ setActivePage }) => {
         <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-200">
           <button
             onClick={() => setActiveTab('appointments')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'appointments'
-                ? 'bg-slate-900 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'appointments'
+              ? 'bg-slate-900 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <Calendar className="w-4 h-4" />
             Appointments ({appointments.length})
@@ -579,11 +609,10 @@ const AdminDashboard = ({ setActivePage }) => {
 
           <button
             onClick={() => setActiveTab('patients')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'patients'
-                ? 'bg-cyan-700 text-white shadow-md shadow-cyan-700/20'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'patients'
+              ? 'bg-cyan-700 text-white shadow-md shadow-cyan-700/20'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <Users className="w-4 h-4 text-cyan-600" />
             Patients ({patientsList.length})
@@ -591,11 +620,10 @@ const AdminDashboard = ({ setActivePage }) => {
 
           <button
             onClick={() => setActiveTab('pharmacy')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'pharmacy'
-                ? 'bg-emerald-700 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'pharmacy'
+              ? 'bg-emerald-700 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <Pill className="w-4 h-4" />
             Pharmacy Orders ({pharmacyOrders.length})
@@ -603,11 +631,10 @@ const AdminDashboard = ({ setActivePage }) => {
 
           <button
             onClick={() => setActiveTab('lab')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'lab'
-                ? 'bg-blue-700 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'lab'
+              ? 'bg-blue-700 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <FlaskConical className="w-4 h-4" />
             Lab Tests ({labBookings.length})
@@ -615,11 +642,10 @@ const AdminDashboard = ({ setActivePage }) => {
 
           <button
             onClick={() => setActiveTab('ambulance')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'ambulance'
-                ? 'bg-rose-700 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'ambulance'
+              ? 'bg-rose-700 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <Siren className="w-4 h-4" />
             Ambulance Dispatches ({ambulanceRequests.length})
@@ -627,11 +653,10 @@ const AdminDashboard = ({ setActivePage }) => {
 
           <button
             onClick={() => setActiveTab('doctors')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'doctors'
-                ? 'bg-purple-800 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'doctors'
+              ? 'bg-purple-800 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <Stethoscope className="w-4 h-4" />
             Doctors Roster ({doctors.length})
@@ -640,11 +665,10 @@ const AdminDashboard = ({ setActivePage }) => {
           {/* New Tab 1: Lab Employees */}
           <button
             onClick={() => setActiveTab('lab_employees')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'lab_employees'
-                ? 'bg-cyan-700 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'lab_employees'
+              ? 'bg-cyan-700 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <FlaskConical className="w-4 h-4" />
             Lab Employees ({labEmployees.length})
@@ -653,11 +677,10 @@ const AdminDashboard = ({ setActivePage }) => {
           {/* New Tab 2: Accounts Section */}
           <button
             onClick={() => setActiveTab('accounts_section')}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${
-              activeTab === 'accounts_section'
-                ? 'bg-emerald-800 text-white shadow-md'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all ${activeTab === 'accounts_section'
+              ? 'bg-emerald-800 text-white shadow-md'
+              : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
           >
             <Landmark className="w-4 h-4" />
             Accounts Section ({accountsStaff.length})
@@ -667,7 +690,7 @@ const AdminDashboard = ({ setActivePage }) => {
         {/* TAB 1: Appointments Management */}
         {activeTab === 'appointments' && (
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden space-y-4">
-            
+
             {/* Filter and Search Bar */}
             <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between gap-4">
               <div className="relative flex-1 max-w-md">
@@ -687,11 +710,10 @@ const AdminDashboard = ({ setActivePage }) => {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize whitespace-nowrap transition-all ${
-                      filterStatus === status
-                        ? 'bg-cyan-600 text-white shadow-sm'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize whitespace-nowrap transition-all ${filterStatus === status
+                      ? 'bg-cyan-600 text-white shadow-sm'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
                   >
                     {status}
                   </button>
@@ -771,12 +793,11 @@ const AdminDashboard = ({ setActivePage }) => {
                           )}
                         </td>
                         <td className="py-4 px-4 text-center">
-                          <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                            app.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' :
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${app.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800' :
                             app.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                            app.status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
-                            'bg-amber-100 text-amber-800'
-                          }`}>
+                              app.status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
+                                'bg-amber-100 text-amber-800'
+                            }`}>
                             {app.status}
                           </span>
                         </td>
@@ -860,11 +881,10 @@ const AdminDashboard = ({ setActivePage }) => {
                       <td className="py-3 px-4 font-semibold">{order.items ? order.items.length : 1} items</td>
                       <td className="py-3 px-4 font-bold text-emerald-700">৳ {order.total_amount || order.totalAmount}</td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-800' :
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-800' :
                           order.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
-                          'bg-amber-100 text-amber-800'
-                        }`}>
+                            'bg-amber-100 text-amber-800'
+                          }`}>
                           {order.status}
                         </span>
                       </td>
@@ -925,12 +945,11 @@ const AdminDashboard = ({ setActivePage }) => {
                       <td className="py-3 px-4">{b.booking_date}</td>
                       <td className="py-3 px-4 font-bold text-slate-900">৳ {b.price}</td>
                       <td className="py-3 px-4 text-center">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          b.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${b.status === 'Completed' ? 'bg-emerald-100 text-emerald-800' :
                           b.status === 'Confirmed' ? 'bg-blue-100 text-blue-800' :
-                          b.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
-                          'bg-amber-100 text-amber-800'
-                        }`}>
+                            b.status === 'Cancelled' ? 'bg-rose-100 text-rose-800' :
+                              'bg-amber-100 text-amber-800'
+                          }`}>
                           {b.status}
                         </span>
                       </td>
@@ -1514,853 +1533,853 @@ const AdminDashboard = ({ setActivePage }) => {
         )}
 
         {/* TAB 8: Patients Management */}
-        {activeTab === 'patients' && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-slate-900">Hospital Registered Patients Directory</h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-100 text-cyan-800">
-                    ID Prefix: P01+
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500">
-                  Admin can view all registered patients in the hospital system, search by ID or name, add new patient accounts, and manage profiles.
-                </p>
-              </div>
+                          {activeTab === 'patients' && (
+                            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
+                              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-lg font-bold text-slate-900">Hospital Registered Patients Directory</h3>
+                                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-cyan-100 text-cyan-800">
+                                      ID Prefix: P01+
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-500">
+                                    Admin can view all registered patients in the hospital system, search by ID or name, add new patient accounts, and manage profiles.
+                                  </p>
+                                </div>
 
-              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-64">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Search patient ID (P01), name..."
-                    value={patientSearchTerm}
-                    onChange={(e) => setPatientSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
-                  />
-                </div>
+                                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                                  <div className="relative flex-1 sm:w-64">
+                                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                                    <input
+                                      type="text"
+                                      placeholder="Search patient ID (P01), name..."
+                                      value={patientSearchTerm}
+                                      onChange={(e) => setPatientSearchTerm(e.target.value)}
+                                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                                    />
+                                  </div>
 
-                <button
-                  onClick={() => setIsAddPatientModalOpen(true)}
-                  className="flex items-center gap-2 bg-cyan-700 hover:bg-cyan-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors shadow-sm shrink-0"
-                >
-                  <UserPlus className="w-4 h-4" /> Add Patient ({getNextPatientCode()})
-                </button>
-              </div>
-            </div>
+                                  <button
+                                    onClick={() => setIsAddPatientModalOpen(true)}
+                                    className="flex items-center gap-2 bg-cyan-700 hover:bg-cyan-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors shadow-sm shrink-0"
+                                  >
+                                    <UserPlus className="w-4 h-4" /> Add Patient ({getNextPatientCode()})
+                                  </button>
+                                </div>
+                              </div>
 
-            {/* Patients List Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
-                    <th className="py-3 px-4">Patient ID</th>
-                    <th className="py-3 px-4">Patient Full Name</th>
-                    <th className="py-3 px-4">Contact Info</th>
-                    <th className="py-3 px-4">Residential Address</th>
-                    <th className="py-3 px-4 text-center">Blood Group</th>
-                    <th className="py-3 px-4 text-center">Registered Date</th>
-                    <th className="py-3 px-4 text-right">Delete Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {filteredPatientsList.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="py-8 text-center text-slate-400">
-                        No registered patients found matching your search. Click "Add Patient" to register one.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredPatientsList.map((pat) => (
-                      <tr key={pat.id || pat.patient_id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-4 px-4 font-mono font-black text-cyan-800">
-                          <span className="bg-cyan-50 border border-cyan-200 px-2.5 py-1 rounded-lg">
-                            {pat.patient_id}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-cyan-700 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
-                              {pat.name ? pat.name.charAt(0).toUpperCase() : 'P'}
+                              {/* Patients List Table */}
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left text-xs">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
+                                      <th className="py-3 px-4">Patient ID</th>
+                                      <th className="py-3 px-4">Patient Full Name</th>
+                                      <th className="py-3 px-4">Contact Info</th>
+                                      <th className="py-3 px-4">Residential Address</th>
+                                      <th className="py-3 px-4 text-center">Blood Group</th>
+                                      <th className="py-3 px-4 text-center">Registered Date</th>
+                                      <th className="py-3 px-4 text-right">Delete Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                                    {filteredPatientsList.length === 0 ? (
+                                      <tr>
+                                        <td colSpan="7" className="py-8 text-center text-slate-400">
+                                          No registered patients found matching your search. Click "Add Patient" to register one.
+                                        </td>
+                                      </tr>
+                                    ) : (
+                                      filteredPatientsList.map((pat) => (
+                                        <tr key={pat.id || pat.patient_id} className="hover:bg-slate-50/80 transition-colors">
+                                          <td className="py-4 px-4 font-mono font-black text-cyan-800">
+                                            <span className="bg-cyan-50 border border-cyan-200 px-2.5 py-1 rounded-lg">
+                                              {pat.patient_id}
+                                            </span>
+                                          </td>
+                                          <td className="py-4 px-4">
+                                            <div className="flex items-center gap-2.5">
+                                              <div className="w-8 h-8 rounded-full bg-cyan-700 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+                                                {pat.name ? pat.name.charAt(0).toUpperCase() : 'P'}
+                                              </div>
+                                              <div>
+                                                <span className="font-bold text-slate-900 block">{pat.name}</span>
+                                                <span className="text-[10px] text-slate-400 capitalize">{pat.gender || 'Patient'}</span>
+                                              </div>
+                                            </div>
+                                          </td>
+                                          <td className="py-4 px-4 space-y-0.5">
+                                            <div className="flex items-center gap-1.5 text-slate-800 font-medium">
+                                              <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                              <span>{pat.phone || 'N/A'}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                                              <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                              <span>{pat.email || 'N/A'}</span>
+                                            </div>
+                                          </td>
+                                          <td className="py-4 px-4 text-slate-600 font-medium">
+                                            {pat.address || 'Dhaka, Bangladesh'}
+                                          </td>
+                                          <td className="py-4 px-4 text-center">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200 text-[11px]">
+                                              <Droplet className="w-3 h-3 text-rose-500" /> {pat.blood_group || 'O+'}
+                                            </span>
+                                          </td>
+                                          <td className="py-4 px-4 text-center font-mono text-[11px] text-slate-500">
+                                            {pat.created_at || '2026-11-20'}
+                                          </td>
+                                          <td className="py-4 px-4 text-right">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleDeletePatient(pat.patient_id)}
+                                              className="inline-flex items-center gap-1 text-rose-600 hover:text-white hover:bg-rose-600 px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-bold transition-all shadow-xs"
+                                            >
+                                              <Trash2 className="w-3.5 h-3.5" />
+                                              <span>Delete</span>
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
-                            <div>
-                              <span className="font-bold text-slate-900 block">{pat.name}</span>
-                              <span className="text-[10px] text-slate-400 capitalize">{pat.gender || 'Patient'}</span>
+                          )}
+
+                        </div>
+
+                        {/* MODAL 1: Add Doctor Modal */}
+                        {isAddDoctorModalOpen && (
+                          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150">
+                              <div className="bg-gradient-to-r from-purple-700 to-indigo-700 p-6 text-white flex items-center justify-between">
+                                <div>
+                                  <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
+                                    Auto ID: {getNextDoctorCode()}
+                                  </span>
+                                  <h3 className="text-lg font-bold mt-1">Add Specialist Doctor</h3>
+                                  <p className="text-xs text-purple-200">New doctor will be assigned ID {getNextDoctorCode()}</p>
+                                </div>
+                                <button
+                                  onClick={() => setIsAddDoctorModalOpen(false)}
+                                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+
+                              <form onSubmit={handleAddDoctorSubmit} className="p-6 space-y-3.5 text-xs">
+                                <div className="bg-purple-50 border border-purple-200 p-3 rounded-2xl flex items-center gap-2 text-purple-900 font-medium">
+                                  <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0" />
+                                  <span>
+                                    <strong>স্থায়ী আইডি:</strong> তৈরি হওয়ার পর এই ডাক্তারের আইডি (<strong>{getNextDoctorCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Doctor Full Name *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Dr. Sabrina Zaman"
+                                    value={doctorForm.name}
+                                    onChange={(e) => setDoctorForm({ ...doctorForm, name: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Specialty / Title *</label>
+                                    <input
+                                      type="text"
+                                      required
+                                      placeholder="e.g. Gynecologist"
+                                      value={doctorForm.specialty}
+                                      onChange={(e) => setDoctorForm({ ...doctorForm, specialty: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Department</label>
+                                    <select
+                                      value={doctorForm.department_id}
+                                      onChange={(e) => setDoctorForm({ ...doctorForm, department_id: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    >
+                                      {departments.map(d => (
+                                        <option key={d.id} value={d.id}>{d.name}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর) *</label>
+                                    <input
+                                      type="tel"
+                                      required
+                                      placeholder="017xxxxxxxx"
+                                      value={doctorForm.phone}
+                                      onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Doctor Email</label>
+                                    <input
+                                      type="email"
+                                      placeholder="doctor@medicare.com"
+                                      value={doctorForm.email}
+                                      onChange={(e) => setDoctorForm({ ...doctorForm, email: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা) *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. House 24, Road 7, Banani, Dhaka"
+                                    value={doctorForm.address}
+                                    onChange={(e) => setDoctorForm({ ...doctorForm, address: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Degrees & Qualifications *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. MBBS, FCPS (Obs & Gynae)"
+                                    value={doctorForm.qualification}
+                                    onChange={(e) => setDoctorForm({ ...doctorForm, qualification: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Login Password *</label>
+                                    <input
+                                      type="text"
+                                      required
+                                      value={doctorForm.password}
+                                      onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Consultation Fee (৳)</label>
+                                    <input
+                                      type="number"
+                                      value={doctorForm.consultation_fee}
+                                      onChange={(e) => setDoctorForm({ ...doctorForm, consultation_fee: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-3">
+                                  <button
+                                    type="submit"
+                                    className="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
+                                  >
+                                    Save & Assign ID ({getNextDoctorCode()})
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsAddDoctorModalOpen(false)}
+                                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
                             </div>
                           </div>
-                        </td>
-                        <td className="py-4 px-4 space-y-0.5">
-                          <div className="flex items-center gap-1.5 text-slate-800 font-medium">
-                            <Phone className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{pat.phone || 'N/A'}</span>
+                        )}
+
+                        {/* MODAL 2: Add Lab Employee Modal */}
+                        {isAddLabModalOpen && (
+                          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150">
+                              <div className="bg-gradient-to-r from-cyan-700 to-blue-700 p-6 text-white flex items-center justify-between">
+                                <div>
+                                  <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
+                                    Auto ID: {getNextLabCode()}
+                                  </span>
+                                  <h3 className="text-lg font-bold mt-1">Add Laboratory Employee</h3>
+                                  <p className="text-xs text-cyan-200">Will be assigned ID {getNextLabCode()} for login</p>
+                                </div>
+                                <button
+                                  onClick={() => setIsAddLabModalOpen(false)}
+                                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+
+                              <form onSubmit={handleAddLabSubmit} className="p-6 space-y-3.5 text-xs">
+                                <div className="bg-cyan-50 border border-cyan-200 p-3 rounded-2xl flex items-center gap-2 text-cyan-900 font-medium">
+                                  <ShieldCheck className="w-4 h-4 text-cyan-700 shrink-0" />
+                                  <span>
+                                    <strong>স্থায়ী আইডি:</strong> তৈরি হওয়ার পর এই ল্যাব কর্মীর আইডি (<strong>{getNextLabCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Employee Full Name *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Md. Jahangir Alam"
+                                    value={labForm.name}
+                                    onChange={(e) => setLabForm({ ...labForm, name: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Email Address</label>
+                                    <input
+                                      type="email"
+                                      placeholder="name.lab@medicare.com"
+                                      value={labForm.email}
+                                      onChange={(e) => setLabForm({ ...labForm, email: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর) *</label>
+                                    <input
+                                      type="tel"
+                                      required
+                                      placeholder="017xxxxxxxx"
+                                      value={labForm.phone}
+                                      onChange={(e) => setLabForm({ ...labForm, phone: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা) *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. House 12, Road 4, Mirpur 10, Dhaka"
+                                    value={labForm.address}
+                                    onChange={(e) => setLabForm({ ...labForm, address: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Specialization / Role</label>
+                                  <input
+                                    type="text"
+                                    placeholder="e.g. Senior Hematologist & Lab Analyst"
+                                    value={labForm.specialization}
+                                    onChange={(e) => setLabForm({ ...labForm, specialization: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Department</label>
+                                    <input
+                                      type="text"
+                                      value={labForm.department}
+                                      onChange={(e) => setLabForm({ ...labForm, department: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Initial Password *</label>
+                                    <input
+                                      type="text"
+                                      required
+                                      value={labForm.password}
+                                      onChange={(e) => setLabForm({ ...labForm, password: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-3">
+                                  <button
+                                    type="submit"
+                                    className="flex-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
+                                  >
+                                    Create Lab Employee ({getNextLabCode()})
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsAddLabModalOpen(false)}
+                                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1.5 text-slate-500 text-[11px]">
-                            <Mail className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{pat.email || 'N/A'}</span>
+                        )}
+
+                        {/* MODAL 3: Add Accounts Staff Modal */}
+                        {isAddAccountsModalOpen && (
+                          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150">
+                              <div className="bg-gradient-to-r from-emerald-800 to-teal-800 p-6 text-white flex items-center justify-between">
+                                <div>
+                                  <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
+                                    Auto ID: {getNextAccountsCode()}
+                                  </span>
+                                  <h3 className="text-lg font-bold mt-1">Add Accounts & Finance Officer</h3>
+                                  <p className="text-xs text-emerald-200">Will be assigned ID {getNextAccountsCode()} for login</p>
+                                </div>
+                                <button
+                                  onClick={() => setIsAddAccountsModalOpen(false)}
+                                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+
+                              <form onSubmit={handleAddAccountsSubmit} className="p-6 space-y-3.5 text-xs">
+                                <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center gap-2 text-emerald-900 font-medium">
+                                  <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                                  <span>
+                                    <strong>স্থায়ী আইডি:</strong> তৈরি হওয়ার পর এই হিসাব কর্মকর্তার আইডি (<strong>{getNextAccountsCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
+                                  </span>
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Officer Full Name *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Mahbubul Haque"
+                                    value={accountsForm.name}
+                                    onChange={(e) => setAccountsForm({ ...accountsForm, name: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Email Address</label>
+                                    <input
+                                      type="email"
+                                      placeholder="name.accounts@medicare.com"
+                                      value={accountsForm.email}
+                                      onChange={(e) => setAccountsForm({ ...accountsForm, email: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর) *</label>
+                                    <input
+                                      type="tel"
+                                      required
+                                      placeholder="017xxxxxxxx"
+                                      value={accountsForm.phone}
+                                      onChange={(e) => setAccountsForm({ ...accountsForm, phone: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা) *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Sector 7, Uttara, Dhaka"
+                                    value={accountsForm.address}
+                                    onChange={(e) => setAccountsForm({ ...accountsForm, address: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Designation / Role Title</label>
+                                  <input
+                                    type="text"
+                                    placeholder="e.g. Senior Billing Executive & Cashier"
+                                    value={accountsForm.designation}
+                                    onChange={(e) => setAccountsForm({ ...accountsForm, designation: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Assigned Section / Desk</label>
+                                    <input
+                                      type="text"
+                                      value={accountsForm.section}
+                                      onChange={(e) => setAccountsForm({ ...accountsForm, section: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Initial Password *</label>
+                                    <input
+                                      type="text"
+                                      required
+                                      value={accountsForm.password}
+                                      onChange={(e) => setAccountsForm({ ...accountsForm, password: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-3">
+                                  <button
+                                    type="submit"
+                                    className="flex-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
+                                  >
+                                    Create Account Officer ({getNextAccountsCode()})
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsAddAccountsModalOpen(false)}
+                                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
                           </div>
-                        </td>
-                        <td className="py-4 px-4 text-slate-600 font-medium">
-                          {pat.address || 'Dhaka, Bangladesh'}
-                        </td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold bg-rose-50 text-rose-700 border border-rose-200 text-[11px]">
-                            <Droplet className="w-3 h-3 text-rose-500" /> {pat.blood_group || 'O+'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-center font-mono text-[11px] text-slate-500">
-                          {pat.created_at || '2026-11-20'}
-                        </td>
-                        <td className="py-4 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePatient(pat.patient_id)}
-                            className="inline-flex items-center gap-1 text-rose-600 hover:text-white hover:bg-rose-600 px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-bold transition-all shadow-xs"
+                        )}
+
+                        {/* MODAL 4: Add Patient Modal */}
+                        {isAddPatientModalOpen && (
+                          <div
+                            onClick={(e) => { if (e.target === e.currentTarget) setIsAddPatientModalOpen(false); }}
+                            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Delete</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+                            <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150 my-6">
+                              <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 text-white flex items-center justify-between">
+                                <div>
+                                  <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
+                                    Auto Patient ID: {getNextPatientCode()}
+                                  </span>
+                                  <h3 className="text-lg font-bold mt-1">Register New Hospital Patient</h3>
+                                  <p className="text-xs text-cyan-100">Patient will be permanently assigned ID {getNextPatientCode()}</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setIsAddPatientModalOpen(false)}
+                                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
+                                >
+                                  ✕
+                                </button>
+                              </div>
 
-      </div>
+                              <form onSubmit={handleAddPatientSubmit} className="p-6 space-y-3.5 text-xs">
+                                <div className="bg-cyan-50 border border-cyan-200 p-3 rounded-2xl flex items-center gap-2 text-cyan-900 font-medium">
+                                  <ShieldCheck className="w-4 h-4 text-cyan-700 shrink-0" />
+                                  <span>
+                                    <strong>স্থায়ী রোগী আইডি:</strong> নিবন্ধনের পর এই রোগীর সিস্টেম আইডি (<strong>{getNextPatientCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
+                                  </span>
+                                </div>
 
-      {/* MODAL 1: Add Doctor Modal */}
-      {isAddDoctorModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="bg-gradient-to-r from-purple-700 to-indigo-700 p-6 text-white flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
-                  Auto ID: {getNextDoctorCode()}
-                </span>
-                <h3 className="text-lg font-bold mt-1">Add Specialist Doctor</h3>
-                <p className="text-xs text-purple-200">New doctor will be assigned ID {getNextDoctorCode()}</p>
-              </div>
-              <button
-                onClick={() => setIsAddDoctorModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-              >
-                ✕
-              </button>
-            </div>
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Patient Full Name *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. Akramul Hasan"
+                                    value={patientForm.name}
+                                    onChange={(e) => setPatientForm({ ...patientForm, name: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
 
-            <form onSubmit={handleAddDoctorSubmit} className="p-6 space-y-3.5 text-xs">
-              <div className="bg-purple-50 border border-purple-200 p-3 rounded-2xl flex items-center gap-2 text-purple-900 font-medium">
-                <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0" />
-                <span>
-                  <strong>স্থায়ী আইডি:</strong> তৈরি হওয়ার পর এই ডাক্তারের আইডি (<strong>{getNextDoctorCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
-                </span>
-              </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Email Address</label>
+                                    <input
+                                      type="email"
+                                      placeholder="patient@medicare.com"
+                                      value={patientForm.email}
+                                      onChange={(e) => setPatientForm({ ...patientForm, email: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Phone Number *</label>
+                                    <input
+                                      type="tel"
+                                      required
+                                      placeholder="017XXXXXXXX"
+                                      value={patientForm.phone}
+                                      onChange={(e) => setPatientForm({ ...patientForm, phone: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    />
+                                  </div>
+                                </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Doctor Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Dr. Sabrina Zaman"
-                  value={doctorForm.name}
-                  onChange={(e) => setDoctorForm({ ...doctorForm, name: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Residential Address</label>
+                                  <input
+                                    type="text"
+                                    placeholder="e.g. House 14, Road 5, Dhanmondi, Dhaka"
+                                    value={patientForm.address}
+                                    onChange={(e) => setPatientForm({ ...patientForm, address: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                  />
+                                </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Specialty / Title *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Gynecologist"
-                    value={doctorForm.specialty}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, specialty: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Blood Group</label>
+                                    <select
+                                      value={patientForm.blood_group}
+                                      onChange={(e) => setPatientForm({ ...patientForm, blood_group: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    >
+                                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                                        <option key={bg} value={bg}>{bg}</option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label className="block font-bold text-slate-700 mb-1">Gender</label>
+                                    <select
+                                      value={patientForm.gender}
+                                      onChange={(e) => setPatientForm({ ...patientForm, gender: e.target.value })}
+                                      className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
+                                    >
+                                      <option value="Male">Male</option>
+                                      <option value="Female">Female</option>
+                                      <option value="Other">Other</option>
+                                    </select>
+                                  </div>
+                                </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Department</label>
-                  <select
-                    value={doctorForm.department_id}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, department_id: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  >
-                    {departments.map(d => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                                <div>
+                                  <label className="block font-bold text-slate-700 mb-1">Initial Password *</label>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={patientForm.password}
+                                    onChange={(e) => setPatientForm({ ...patientForm, password: e.target.value })}
+                                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
+                                  />
+                                </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর) *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="017xxxxxxxx"
-                    value={doctorForm.phone}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
+                                <div className="flex gap-3 pt-3">
+                                  <button
+                                    type="submit"
+                                    className="flex-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
+                                  >
+                                    Register Patient ({getNextPatientCode()})
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsAddPatientModalOpen(false)}
+                                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        )}
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Doctor Email</label>
-                  <input
-                    type="email"
-                    placeholder="doctor@medicare.com"
-                    value={doctorForm.email}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, email: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
+                        {/* MODAL 5: Admin View Official Money Receipt & Voucher */}
+                        {adminViewingReceipt && (
+                          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                            <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-6">
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. House 24, Road 7, Banani, Dhaka"
-                  value={doctorForm.address}
-                  onChange={(e) => setDoctorForm({ ...doctorForm, address: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
+                              {/* Header Banner */}
+                              <div className="bg-gradient-to-r from-emerald-800 to-teal-900 p-6 text-white flex justify-between items-start">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold">
+                                      <Receipt className="w-4 h-4 text-emerald-200" />
+                                    </div>
+                                    <div>
+                                      <h3 className="text-base font-black tracking-wide">MEDICARE HOSPITAL & DIAGNOSTIC CENTER</h3>
+                                      <p className="text-[10px] text-emerald-200">Official Cash Collection Receipt & Accounts Voucher</p>
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setAdminViewingReceipt(null)}
+                                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Degrees & Qualifications *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. MBBS, FCPS (Obs & Gynae)"
-                  value={doctorForm.qualification}
-                  onChange={(e) => setDoctorForm({ ...doctorForm, qualification: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
+                              {/* Receipt Body */}
+                              <div className="p-6 space-y-5 text-xs text-slate-700 bg-white" id="admin-printable-receipt">
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Login Password *</label>
-                  <input
-                    type="text"
-                    required
-                    value={doctorForm.password}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, password: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
-                  />
-                </div>
+                                {/* Receipt & Voucher Meta */}
+                                <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Voucher / Invoice No</span>
+                                    <span className="font-mono font-black text-sm text-purple-950 block">
+                                      {adminViewingReceipt.invoice_code}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 block">
+                                      Date: <strong>{adminViewingReceipt.created_at || '2026-11-24'}</strong>
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1 text-right">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Cashier / Billing Counter</span>
+                                    <span className="font-mono font-bold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                                      {adminViewingReceipt.cashier_code || 'A101'}
+                                    </span>
+                                    <span className="text-[11px] font-bold text-slate-800 block">
+                                      {adminViewingReceipt.cashier_name || 'Accounts Officer'}
+                                    </span>
+                                  </div>
+                                </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Consultation Fee (৳)</label>
-                  <input
-                    type="number"
-                    value={doctorForm.consultation_fee}
-                    onChange={(e) => setDoctorForm({ ...doctorForm, consultation_fee: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
+                                {/* Patient & Doctor Meta */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50/60 rounded-2xl border border-slate-100">
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Patient Details</span>
+                                    <span className="font-extrabold text-slate-900 block text-xs">
+                                      {adminViewingReceipt.patient_name}
+                                    </span>
+                                    <span className="font-mono text-[11px] font-bold text-cyan-800 block">
+                                      ID: {adminViewingReceipt.patient_id}
+                                    </span>
+                                    {adminViewingReceipt.patient_phone && (
+                                      <span className="text-[11px] text-slate-500 block">
+                                        📞 {adminViewingReceipt.patient_phone}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="space-y-1 sm:text-right">
+                                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Referred By (পরামর্শক)</span>
+                                    <span className="font-bold text-purple-900 block text-xs">
+                                      {adminViewingReceipt.referred_doctor?.name || 'Hospital General OPD / Self'}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 block">
+                                      Payment Method: <strong className="text-emerald-700">{adminViewingReceipt.payment_method || 'Cash Counter'}</strong>
+                                    </span>
+                                  </div>
+                                </div>
 
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-purple-700 hover:bg-purple-800 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
-                >
-                  Save & Assign ID ({getNextDoctorCode()})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAddDoctorModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                                {/* Itemized Table */}
+                                <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                                  <table className="w-full text-left text-xs">
+                                    <thead>
+                                      <tr className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                                        <th className="py-2.5 px-3">#</th>
+                                        <th className="py-2.5 px-3">Service Description / Test Charge</th>
+                                        <th className="py-2.5 px-3 text-right">Amount (৳)</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                      {adminViewingReceipt.items && adminViewingReceipt.items.map((item, idx) => (
+                                        <tr key={idx} className="hover:bg-slate-50/50">
+                                          <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
+                                          <td className="py-2.5 px-3 font-semibold text-slate-800">{item.description}</td>
+                                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
+                                            ৳ {Number(item.amount).toLocaleString()}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                    <tfoot>
+                                      <tr className="border-t border-slate-200 bg-slate-50/80">
+                                        <td colSpan="2" className="py-2 px-3 text-right font-bold text-slate-600">Subtotal:</td>
+                                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
+                                          ৳ {Number(adminViewingReceipt.subtotal || adminViewingReceipt.total_amount).toLocaleString()}
+                                        </td>
+                                      </tr>
+                                      {Number(adminViewingReceipt.discount_amount) > 0 && (
+                                        <tr className="bg-slate-50/80 text-rose-600">
+                                          <td colSpan="2" className="py-1 px-3 text-right font-bold text-xs">Discount:</td>
+                                          <td className="py-1 px-3 text-right font-mono font-bold">
+                                            - ৳ {Number(adminViewingReceipt.discount_amount).toLocaleString()}
+                                          </td>
+                                        </tr>
+                                      )}
+                                      <tr className="border-t-2 border-emerald-500 bg-emerald-50 text-emerald-950 font-black">
+                                        <td colSpan="2" className="py-2.5 px-3 text-right text-xs">Net Amount Paid (সর্বমোট পরিশোধিত):</td>
+                                        <td className="py-2.5 px-3 text-right font-mono text-base">
+                                          ৳ {Number(adminViewingReceipt.total_amount).toLocaleString()}
+                                        </td>
+                                      </tr>
+                                    </tfoot>
+                                  </table>
+                                </div>
 
-      {/* MODAL 2: Add Lab Employee Modal */}
-      {isAddLabModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="bg-gradient-to-r from-cyan-700 to-blue-700 p-6 text-white flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
-                  Auto ID: {getNextLabCode()}
-                </span>
-                <h3 className="text-lg font-bold mt-1">Add Laboratory Employee</h3>
-                <p className="text-xs text-cyan-200">Will be assigned ID {getNextLabCode()} for login</p>
-              </div>
-              <button
-                onClick={() => setIsAddLabModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-              >
-                ✕
-              </button>
-            </div>
+                                {/* Status & Hospital Seal */}
+                                <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-xs">
+                                  <div>
+                                    <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px]">
+                                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> PAID IN FULL (পরিশোধিত)
+                                    </span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="text-[10px] text-slate-400 block">Authorized Cashier Signature</span>
+                                    <span className="font-mono font-bold text-xs text-slate-800">
+                                      {adminViewingReceipt.cashier_code || 'A101'}
+                                    </span>
+                                  </div>
+                                </div>
 
-            <form onSubmit={handleAddLabSubmit} className="p-6 space-y-3.5 text-xs">
-              <div className="bg-cyan-50 border border-cyan-200 p-3 rounded-2xl flex items-center gap-2 text-cyan-900 font-medium">
-                <ShieldCheck className="w-4 h-4 text-cyan-700 shrink-0" />
-                <span>
-                  <strong>স্থায়ী আইডি:</strong> তৈরি হওয়ার পর এই ল্যাব কর্মীর আইডি (<strong>{getNextLabCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
-                </span>
-              </div>
+                              </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Employee Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Md. Jahangir Alam"
-                  value={labForm.name}
-                  onChange={(e) => setLabForm({ ...labForm, name: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
+                              {/* Modal Bottom Actions */}
+                              <div className="bg-slate-100 p-4 border-t border-slate-200 flex items-center justify-between gap-3">
+                                <span className="text-xs text-slate-500 font-medium">
+                                  Receipt: <strong className="font-mono text-purple-900">{adminViewingReceipt.invoice_code}</strong>
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => window.print()}
+                                    className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors shadow-sm"
+                                  >
+                                    <Printer className="w-4 h-4" /> Print / Save Voucher PDF
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setAdminViewingReceipt(null)}
+                                    className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+                                  >
+                                    Close
+                                  </button>
+                                </div>
+                              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="name.lab@medicare.com"
-                    value={labForm.email}
-                    onChange={(e) => setLabForm({ ...labForm, email: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
+                            </div>
+                          </div>
+                        )}
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর) *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="017xxxxxxxx"
-                    value={labForm.phone}
-                    onChange={(e) => setLabForm({ ...labForm, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. House 12, Road 4, Mirpur 10, Dhaka"
-                  value={labForm.address}
-                  onChange={(e) => setLabForm({ ...labForm, address: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Specialization / Role</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Senior Hematologist & Lab Analyst"
-                  value={labForm.specialization}
-                  onChange={(e) => setLabForm({ ...labForm, specialization: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Department</label>
-                  <input
-                    type="text"
-                    value={labForm.department}
-                    onChange={(e) => setLabForm({ ...labForm, department: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Initial Password *</label>
-                  <input
-                    type="text"
-                    required
-                    value={labForm.password}
-                    onChange={(e) => setLabForm({ ...labForm, password: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
-                >
-                  Create Lab Employee ({getNextLabCode()})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAddLabModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 3: Add Accounts Staff Modal */}
-      {isAddAccountsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="bg-gradient-to-r from-emerald-800 to-teal-800 p-6 text-white flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
-                  Auto ID: {getNextAccountsCode()}
-                </span>
-                <h3 className="text-lg font-bold mt-1">Add Accounts & Finance Officer</h3>
-                <p className="text-xs text-emerald-200">Will be assigned ID {getNextAccountsCode()} for login</p>
-              </div>
-              <button
-                onClick={() => setIsAddAccountsModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleAddAccountsSubmit} className="p-6 space-y-3.5 text-xs">
-              <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center gap-2 text-emerald-900 font-medium">
-                <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
-                <span>
-                  <strong>স্থায়ী আইডি:</strong> তৈরি হওয়ার পর এই হিসাব কর্মকর্তার আইডি (<strong>{getNextAccountsCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
-                </span>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Officer Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Mahbubul Haque"
-                  value={accountsForm.name}
-                  onChange={(e) => setAccountsForm({ ...accountsForm, name: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="name.accounts@medicare.com"
-                    value={accountsForm.email}
-                    onChange={(e) => setAccountsForm({ ...accountsForm, email: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Phone Number (মোবাইল নম্বর) *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="017xxxxxxxx"
-                    value={accountsForm.phone}
-                    onChange={(e) => setAccountsForm({ ...accountsForm, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Present Address (বর্তমান ঠিকানা) *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Sector 7, Uttara, Dhaka"
-                  value={accountsForm.address}
-                  onChange={(e) => setAccountsForm({ ...accountsForm, address: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Designation / Role Title</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Senior Billing Executive & Cashier"
-                  value={accountsForm.designation}
-                  onChange={(e) => setAccountsForm({ ...accountsForm, designation: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Assigned Section / Desk</label>
-                  <input
-                    type="text"
-                    value={accountsForm.section}
-                    onChange={(e) => setAccountsForm({ ...accountsForm, section: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Initial Password *</label>
-                  <input
-                    type="text"
-                    required
-                    value={accountsForm.password}
-                    onChange={(e) => setAccountsForm({ ...accountsForm, password: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
-                >
-                  Create Account Officer ({getNextAccountsCode()})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAddAccountsModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 4: Add Patient Modal */}
-      {isAddPatientModalOpen && (
-        <div 
-          onClick={(e) => { if (e.target === e.currentTarget) setIsAddPatientModalOpen(false); }}
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
-        >
-          <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in duration-150 my-6">
-            <div className="bg-gradient-to-r from-cyan-600 to-blue-600 p-6 text-white flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-mono font-bold bg-white/20 px-2 py-0.5 rounded uppercase">
-                  Auto Patient ID: {getNextPatientCode()}
-                </span>
-                <h3 className="text-lg font-bold mt-1">Register New Hospital Patient</h3>
-                <p className="text-xs text-cyan-100">Patient will be permanently assigned ID {getNextPatientCode()}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsAddPatientModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleAddPatientSubmit} className="p-6 space-y-3.5 text-xs">
-              <div className="bg-cyan-50 border border-cyan-200 p-3 rounded-2xl flex items-center gap-2 text-cyan-900 font-medium">
-                <ShieldCheck className="w-4 h-4 text-cyan-700 shrink-0" />
-                <span>
-                  <strong>স্থায়ী রোগী আইডি:</strong> নিবন্ধনের পর এই রোগীর সিস্টেম আইডি (<strong>{getNextPatientCode()}</strong>) স্থায়ী ও অপরিবর্তনশীল থাকবে।
-                </span>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Patient Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Akramul Hasan"
-                  value={patientForm.name}
-                  onChange={(e) => setPatientForm({ ...patientForm, name: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="patient@medicare.com"
-                    value={patientForm.email}
-                    onChange={(e) => setPatientForm({ ...patientForm, email: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="017XXXXXXXX"
-                    value={patientForm.phone}
-                    onChange={(e) => setPatientForm({ ...patientForm, phone: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Residential Address</label>
-                <input
-                  type="text"
-                  placeholder="e.g. House 14, Road 5, Dhanmondi, Dhaka"
-                  value={patientForm.address}
-                  onChange={(e) => setPatientForm({ ...patientForm, address: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Blood Group</label>
-                  <select
-                    value={patientForm.blood_group}
-                    onChange={(e) => setPatientForm({ ...patientForm, blood_group: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  >
-                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
-                      <option key={bg} value={bg}>{bg}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Gender</label>
-                  <select
-                    value={patientForm.gender}
-                    onChange={(e) => setPatientForm({ ...patientForm, gender: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white"
-                  >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Initial Password *</label>
-                <input
-                  type="text"
-                  required
-                  value={patientForm.password}
-                  onChange={(e) => setPatientForm({ ...patientForm, password: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:bg-white font-mono"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="submit"
-                  className="flex-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold py-2.5 rounded-xl text-xs transition-colors"
-                >
-                  Register Patient ({getNextPatientCode()})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsAddPatientModalOpen(false)}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL 5: Admin View Official Money Receipt & Voucher */}
-      {adminViewingReceipt && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-6">
-            
-            {/* Header Banner */}
-            <div className="bg-gradient-to-r from-emerald-800 to-teal-900 p-6 text-white flex justify-between items-start">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold">
-                    <Receipt className="w-4 h-4 text-emerald-200" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-black tracking-wide">MEDICARE HOSPITAL & DIAGNOSTIC CENTER</h3>
-                    <p className="text-[10px] text-emerald-200">Official Cash Collection Receipt & Accounts Voucher</p>
-                  </div>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAdminViewingReceipt(null)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Receipt Body */}
-            <div className="p-6 space-y-5 text-xs text-slate-700 bg-white" id="admin-printable-receipt">
-              
-              {/* Receipt & Voucher Meta */}
-              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Voucher / Invoice No</span>
-                  <span className="font-mono font-black text-sm text-purple-950 block">
-                    {adminViewingReceipt.invoice_code}
-                  </span>
-                  <span className="text-[10px] text-slate-500 block">
-                    Date: <strong>{adminViewingReceipt.created_at || '2026-11-24'}</strong>
-                  </span>
-                </div>
-                <div className="space-y-1 text-right">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Cashier / Billing Counter</span>
-                  <span className="font-mono font-bold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
-                    {adminViewingReceipt.cashier_code || 'A101'}
-                  </span>
-                  <span className="text-[11px] font-bold text-slate-800 block">
-                    {adminViewingReceipt.cashier_name || 'Accounts Officer'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Patient & Doctor Meta */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50/60 rounded-2xl border border-slate-100">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Patient Details</span>
-                  <span className="font-extrabold text-slate-900 block text-xs">
-                    {adminViewingReceipt.patient_name}
-                  </span>
-                  <span className="font-mono text-[11px] font-bold text-cyan-800 block">
-                    ID: {adminViewingReceipt.patient_id}
-                  </span>
-                  {adminViewingReceipt.patient_phone && (
-                    <span className="text-[11px] text-slate-500 block">
-                      📞 {adminViewingReceipt.patient_phone}
-                    </span>
-                  )}
-                </div>
-                <div className="space-y-1 sm:text-right">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Referred By (পরামর্শক)</span>
-                  <span className="font-bold text-purple-900 block text-xs">
-                    {adminViewingReceipt.referred_doctor?.name || 'Hospital General OPD / Self'}
-                  </span>
-                  <span className="text-[10px] text-slate-500 block">
-                    Payment Method: <strong className="text-emerald-700">{adminViewingReceipt.payment_method || 'Cash Counter'}</strong>
-                  </span>
-                </div>
-              </div>
-
-              {/* Itemized Table */}
-              <div className="border border-slate-200 rounded-2xl overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
-                      <th className="py-2.5 px-3">#</th>
-                      <th className="py-2.5 px-3">Service Description / Test Charge</th>
-                      <th className="py-2.5 px-3 text-right">Amount (৳)</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {adminViewingReceipt.items && adminViewingReceipt.items.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50">
-                        <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
-                        <td className="py-2.5 px-3 font-semibold text-slate-800">{item.description}</td>
-                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
-                          ৳ {Number(item.amount).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t border-slate-200 bg-slate-50/80">
-                      <td colSpan="2" className="py-2 px-3 text-right font-bold text-slate-600">Subtotal:</td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
-                        ৳ {Number(adminViewingReceipt.subtotal || adminViewingReceipt.total_amount).toLocaleString()}
-                      </td>
-                    </tr>
-                    {Number(adminViewingReceipt.discount_amount) > 0 && (
-                      <tr className="bg-slate-50/80 text-rose-600">
-                        <td colSpan="2" className="py-1 px-3 text-right font-bold text-xs">Discount:</td>
-                        <td className="py-1 px-3 text-right font-mono font-bold">
-                          - ৳ {Number(adminViewingReceipt.discount_amount).toLocaleString()}
-                        </td>
-                      </tr>
-                    )}
-                    <tr className="border-t-2 border-emerald-500 bg-emerald-50 text-emerald-950 font-black">
-                      <td colSpan="2" className="py-2.5 px-3 text-right text-xs">Net Amount Paid (সর্বমোট পরিশোধিত):</td>
-                      <td className="py-2.5 px-3 text-right font-mono text-base">
-                        ৳ {Number(adminViewingReceipt.total_amount).toLocaleString()}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              {/* Status & Hospital Seal */}
-              <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-xs">
-                <div>
-                  <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px]">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> PAID IN FULL (পরিশোধিত)
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-400 block">Authorized Cashier Signature</span>
-                  <span className="font-mono font-bold text-xs text-slate-800">
-                    {adminViewingReceipt.cashier_code || 'A101'}
-                  </span>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Modal Bottom Actions */}
-            <div className="bg-slate-100 p-4 border-t border-slate-200 flex items-center justify-between gap-3">
-              <span className="text-xs text-slate-500 font-medium">
-                Receipt: <strong className="font-mono text-purple-900">{adminViewingReceipt.invoice_code}</strong>
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors shadow-sm"
-                >
-                  <Printer className="w-4 h-4" /> Print / Save Voucher PDF
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAdminViewingReceipt(null)}
-                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-    </div>
-  );
+                    </div>
+                    );
 };
 
-export default AdminDashboard;
+                    export default AdminDashboard;
