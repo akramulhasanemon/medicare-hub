@@ -474,6 +474,7 @@ export const initialPrescriptions = [
     patient_age: 45,
     patient_gender: "Male",
     patient_phone: "01811112233",
+    patient_email: "patient@medicare.com",
     date: "2026-11-23",
     vitals: { bp: "125/82 mmHg", pulse: "74 bpm", weight: "72 kg", temp: "98.4°F", sugar: "5.7 mmol/L" },
     diagnosis: "Primary Mild Hypertension & Exertional Chest Discomfort",
@@ -484,6 +485,29 @@ export const initialPrescriptions = [
     ],
     tests_advised: ["Serum Lipid Profile (12 hrs fasting)", "Echocardiogram (Echo)", "Serum Creatinine"],
     advice: "Avoid excess table salt and fried food. Engage in 30 mins brisk walking daily. Re-check BP in 2 weeks."
+  },
+  {
+    id: 2,
+    prescription_code: "RX-2026-102",
+    doctor_code: "D101",
+    doctor_name: "Prof. Dr. Mahfuzur Rahman",
+    doctor_specialty: "Cardiologist & Internal Medicine",
+    patient_id: "P02",
+    patient_name: "Akramul Hasan",
+    patient_age: 32,
+    patient_gender: "Male",
+    patient_phone: "01568812468",
+    patient_email: "akramul@medicare.com",
+    date: "2026-11-24",
+    vitals: { bp: "120/80 mmHg", pulse: "76 bpm", weight: "68 kg", temp: "98.6°F", sugar: "5.5 mmol/L" },
+    diagnosis: "General Physical Fatigue & Seasonal Dust Allergy",
+    medicines: [
+      { name: "Tab. Fexo 120mg", dosage: "0 + 0 + 1", duration: "10 Days", instruction: "Night after meal" },
+      { name: "Tab. Bextram Gold Multivitamin", dosage: "1 + 0 + 0", duration: "30 Days", instruction: "Morning after breakfast" },
+      { name: "Cap. Sergel 20mg", dosage: "1 + 0 + 1", duration: "14 Days", instruction: "Before meal" }
+    ],
+    tests_advised: ["Complete Blood Count (CBC)", "Serum Vitamin D3"],
+    advice: "Drink at least 3 liters of fresh drinking water daily. Avoid cold allergens and dusty environments. Get adequate sleep."
   }
 ];
 

@@ -268,9 +268,12 @@ export const AuthProvider = ({ children }) => {
     let assignedId = '';
 
     if (role === 'doctor') {
-      let maxNum = 100;
+      let maxNum = 106;
       const doctors = JSON.parse(localStorage.getItem('medicare_doctors') || '[]');
-      [...doctors.map(d => d.doctor_code), ...registeredUsers.filter(u => u.role === 'doctor').map(u => u.patient_id)].forEach(code => {
+      [
+        ...doctors.map(d => d.doctor_code || (typeof d.id === 'number' && d.id < 100 ? `D${100 + d.id}` : '')),
+        ...registeredUsers.filter(u => u.role === 'doctor').map(u => u.patient_id)
+      ].forEach(code => {
         const m = (code || '').match(/^D(\d+)$/i);
         if (m) {
           const n = parseInt(m[1], 10);

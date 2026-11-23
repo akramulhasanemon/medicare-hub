@@ -20,10 +20,63 @@ const DataContext = createContext(null);
 export const DataProvider = ({ children }) => {
   const { user } = useAuth();
 
+  // Helper to sanitize and enforce unique auto-incremented Doctor IDs (D101, D102, D103...)
+  const sanitizeDoctorsList = (rawList) => {
+    const list = Array.isArray(rawList) && rawList.length > 0 ? rawList : initialDoctors;
+    const canonicalMap = {
+      'prof. dr. mahfuzur rahman': 'D101',
+      'dr. sarah tasnim': 'D102',
+      'dr. tanvir ahmed': 'D103',
+      'dr. nusrat jahan': 'D104',
+      'dr. rafiqul islam': 'D105',
+      'dr. sabina yasmin': 'D106'
+    };
+
+    const usedCodes = new Set();
+    let maxNum = 106;
+
+    // First pass: assign canonical and explicitly unique codes
+    const pass1 = list.map((doc, idx) => {
+      const lowerName = String(doc.name || '').trim().toLowerCase();
+      let code = doc.doctor_code;
+
+      if (canonicalMap[lowerName]) {
+        code = canonicalMap[lowerName];
+      } else if (!code && typeof doc.id === 'number' && doc.id <= 6) {
+        code = `D${100 + doc.id}`;
+      }
+
+      if (code && /^D\d+$/i.test(code) && !usedCodes.has(code.toUpperCase())) {
+        usedCodes.add(code.toUpperCase());
+        const num = parseInt(code.replace(/\D/g, ''), 10);
+        if (num > maxNum) maxNum = num;
+        return { ...doc, doctor_code: code.toUpperCase() };
+      }
+
+      return { ...doc, doctor_code: null };
+    });
+
+    // Second pass: assign next auto-incremented codes to any doctor with duplicate or missing code (e.g. Dr. Ronobir chandra)
+    const result = pass1.map(doc => {
+      if (doc.doctor_code) return doc;
+      maxNum += 1;
+      const newCode = `D${maxNum}`;
+      usedCodes.add(newCode);
+      return { ...doc, doctor_code: newCode };
+    });
+
+    return result;
+  };
+
   // Core Clinical State
   const [doctors, setDoctors] = useState(() => {
-    const saved = localStorage.getItem('medicare_doctors');
-    return saved ? JSON.parse(saved) : initialDoctors;
+    try {
+      const saved = localStorage.getItem('medicare_doctors');
+      const parsed = saved ? JSON.parse(saved) : initialDoctors;
+      return sanitizeDoctorsList(parsed);
+    } catch (e) {
+      return sanitizeDoctorsList(initialDoctors);
+    }
   });
 
   const [departments] = useState(initialDepartments);
@@ -154,13 +207,17 @@ export const DataProvider = ({ children }) => {
 
   // Next Code Generator Helpers
   const getNextDoctorCode = () => {
-    let maxNum = 100;
-    doctors.forEach(d => {
+    let maxNum = 106;
+    (doctors || []).forEach(d => {
       const code = d.doctor_code || '';
-      const match = code.match(/^D(\d+)$/i);
+      const match = String(code).match(/^D(\d+)$/i);
       if (match) {
         const num = parseInt(match[1], 10);
         if (num > maxNum) maxNum = num;
+      }
+      if (typeof d.id === 'number' && d.id > 0 && d.id < 1000) {
+        const derivedNum = d.id >= 100 ? d.id : (100 + d.id);
+        if (derivedNum > maxNum) maxNum = derivedNum;
       }
     });
     return `D${maxNum + 1}`;
@@ -280,7 +337,7 @@ export const DataProvider = ({ children }) => {
 
   // Doctor CRUD
   const addDoctor = (doctorData) => {
-    const nextCode = doctorData.doctor_code || getNextDoctorCode();
+    const nextCode = getNextDoctorCode();
     const newDoctor = {
       id: Date.now(),
       doctor_code: nextCode,
@@ -620,6 +677,35 @@ export const DataProvider = ({ children }) => {
       })
     : [];
 
+  // Filter digital prescriptions strictly for current logged in patient
+  const patientPrescriptions = user
+    ? (prescriptions || []).filter(rx => {
+        if (!rx) return false;
+        const uRole = String(user.role || '').toLowerCase();
+        if (uRole === 'admin') return true;
+
+        const uPatientId = String(user.patient_id || user.id || '').trim().toUpperCase();
+        const rxPatientId = String(rx.patient_id || '').trim().toUpperCase();
+        if (uPatientId && rxPatientId && (uPatientId === rxPatientId || rxPatientId === `P${uPatientId}`)) {
+          return true;
+        }
+
+        const uPhone = String(user.phone || '').replace(/\D/g, '');
+        const rxPhone = String(rx.patient_phone || '').replace(/\D/g, '');
+        if (uPhone && rxPhone && uPhone === rxPhone) return true;
+
+        const uEmail = String(user.email || '').trim().toLowerCase();
+        const rxEmail = String(rx.patient_email || '').trim().toLowerCase();
+        if (uEmail && rxEmail && uEmail === rxEmail) return true;
+
+        const uName = String(user.name || '').trim().toLowerCase();
+        const rxName = String(rx.patient_name || '').trim().toLowerCase();
+        if (uName && rxName && !rx.patient_id && uName === rxName) return true;
+
+        return false;
+      })
+    : [];
+
   return (
     <DataContext.Provider value={{
       doctors,
@@ -665,6 +751,7 @@ export const DataProvider = ({ children }) => {
 
       // Digital Prescriptions, Lab Reports, Hospital Invoices
       prescriptions,
+      patientPrescriptions,
       issuePrescription,
       labReports,
       issueLabReport,

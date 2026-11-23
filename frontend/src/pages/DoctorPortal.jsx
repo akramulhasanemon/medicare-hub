@@ -149,16 +149,33 @@ const DoctorPortal = ({ setActivePage }) => {
     e.preventDefault();
     if (!activePrescriptionModal) return;
 
+    // Accurately resolve patient permanent ID (P01, P02, etc.)
+    let resolvedPatientId = activePrescriptionModal.patient_code || 
+      (typeof activePrescriptionModal.patient_id === 'string' && activePrescriptionModal.patient_id.startsWith('P') ? activePrescriptionModal.patient_id : null);
+    
+    if (!resolvedPatientId) {
+      try {
+        const reg = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
+        const u = reg.find(user => 
+          (user.phone && activePrescriptionModal.patient_phone && user.phone === activePrescriptionModal.patient_phone) ||
+          (user.email && activePrescriptionModal.patient_email && user.email.toLowerCase() === activePrescriptionModal.patient_email.toLowerCase()) ||
+          (user.name && activePrescriptionModal.patient_name && user.name.toLowerCase() === activePrescriptionModal.patient_name.toLowerCase())
+        );
+        if (u && u.patient_id) resolvedPatientId = u.patient_id;
+      } catch (e) {}
+    }
+
     const rxData = {
       appointment_id: activePrescriptionModal.id,
       doctor_code: doctorCode,
       doctor_name: doctorName,
       doctor_specialty: doctorSpecialty,
-      patient_id: activePrescriptionModal.patient_code || 'P01',
+      patient_id: resolvedPatientId || 'P01',
       patient_name: activePrescriptionModal.patient_name,
       patient_phone: activePrescriptionModal.patient_phone,
-      patient_age: 42,
-      patient_gender: 'Male',
+      patient_email: activePrescriptionModal.patient_email || '',
+      patient_age: activePrescriptionModal.patient_age || 42,
+      patient_gender: activePrescriptionModal.patient_gender || 'Male',
       vitals: {
         bp: rxForm.bp,
         pulse: rxForm.pulse,

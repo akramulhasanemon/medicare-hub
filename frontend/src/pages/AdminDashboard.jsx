@@ -404,19 +404,19 @@ const AdminDashboard = ({ setActivePage }) => {
               onClick={() => setIsAddDoctorModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-purple-600/30 transition-all text-xs"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Doctor (D10X)
+              <Plus className="w-3.5 h-3.5" /> Add Doctor ({getNextDoctorCode()})
             </button>
             <button
               onClick={() => setIsAddLabModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 transition-all text-xs"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Lab Staff (L10X)
+              <Plus className="w-3.5 h-3.5" /> Add Lab Staff ({getNextLabCode()})
             </button>
             <button
               onClick={() => setIsAddAccountsModalOpen(true)}
               className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/30 transition-all text-xs"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Account (A10X)
+              <Plus className="w-3.5 h-3.5" /> Add Account ({getNextAccountsCode()})
             </button>
             <button
               onClick={() => setIsAddPatientModalOpen(true)}
@@ -1091,95 +1091,358 @@ const AdminDashboard = ({ setActivePage }) => {
           </div>
         )}
 
-        {/* TAB 7: Accounts Section Management with A101, A102, Add & Delete */}
+        {/* TAB 7: Accounts Section Management with A101, A102, Cashier Revenue Breakdown & Invoices Ledger */}
         {activeTab === 'accounts_section' && (
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-slate-900">Hospital Accounts & Finance Section</h3>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                    ID Prefix: A101+
-                  </span>
+          <div className="space-y-6">
+
+            {/* TOP FINANCIAL METRICS OVERVIEW */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 rounded-3xl shadow-sm space-y-1">
+                <div className="flex items-center justify-between opacity-80 text-xs font-semibold">
+                  <span>Total Invoiced Revenue (মোট আদায়)</span>
+                  <DollarSign className="w-5 h-5" />
                 </div>
-                <p className="text-xs text-slate-500">
-                  Admin can Add and Delete account officers. Each staff member gets an auto-incremented ID (e.g. A101, A102...) to login.
+                <div className="text-2xl sm:text-3xl font-black font-mono">
+                  ৳ {grandAccountsRevenue.toLocaleString()}
+                </div>
+                <p className="text-[11px] text-emerald-100">
+                  হাসপাতালের সকল ক্যাশিয়ার কাউন্টারের সর্বমোট সংগ্রহ
                 </p>
               </div>
-              <button
-                onClick={() => setIsAddAccountsModalOpen(true)}
-                className="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
-              >
-                <UserPlus className="w-4 h-4" /> Add Account Officer ({getNextAccountsCode()})
-              </button>
+
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                  <span>Total Vouchers Issued (মোট ভাউচার)</span>
+                  <Receipt className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
+                  {allInvoices.length}
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  সকল পেইড মানি রিসিপ্ট ও ক্যাশ ভাউচার সংখ্যা
+                </p>
+              </div>
+
+              <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm space-y-1">
+                <div className="flex items-center justify-between text-slate-400 text-xs font-semibold">
+                  <span>Active Billing Counters (অফিসার কাউন্টার)</span>
+                  <Landmark className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono">
+                  {staffCollectionList.length}
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  নিবন্ধিত হিসাব ও বিলিং কর্মকর্তা আইডি (A101+)
+                </p>
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
-                    <th className="py-3 px-4">Account ID</th>
-                    <th className="py-3 px-4">Staff Name & Designation</th>
-                    <th className="py-3 px-4">Contact Info</th>
-                    <th className="py-3 px-4">Assigned Section</th>
-                    <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-4 text-right">Delete Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  {accountsStaff.length > 0 ? (
-                    accountsStaff.map(staff => (
-                      <tr key={staff.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3.5 px-4">
-                          <span className="font-mono font-black text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs">
-                            {staff.account_code}
+            {/* SECTION 1: CASHIER ACCOUNT BREAKDOWN (কার আইডি থেকে কত টাকা আসলো) */}
+            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <Landmark className="w-5 h-5 text-emerald-600" />
+                    <span>কার আইডি থেকে কত টাকা আসলো (Cashier Account-wise Collection)</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    প্রতিটি হিসাব কর্মকর্তা (A101, A102, A103...) এর আইডি অনুযায়ী মোট আদায় ও ভাউচার পরিসংখ্যান
+                  </p>
+                </div>
+                {accountsFilterStaff !== 'ALL' && (
+                  <button
+                    onClick={() => setAccountsFilterStaff('ALL')}
+                    className="text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold px-3 py-1.5 rounded-xl border border-emerald-200 transition-colors"
+                  >
+                    Reset Filter (সকল অফিসার দেখান)
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {staffCollectionList.map(staff => {
+                  const isSelected = accountsFilterStaff === staff.code;
+                  return (
+                    <div
+                      key={`cashier-${staff.code}`}
+                      className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                        isSelected
+                          ? 'bg-emerald-50/70 border-emerald-400 ring-2 ring-emerald-500/20'
+                          : 'bg-slate-50/50 hover:bg-white border-slate-200 hover:border-emerald-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-black text-xs px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-300">
+                            {staff.code}
                           </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="font-bold text-slate-900 block text-sm">{staff.name}</span>
-                          <span className="text-slate-500 text-[11px]">{staff.designation}</span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="flex items-center gap-1.5 text-slate-700">
-                            <Mail className="w-3 h-3 text-slate-400" /> {staff.email}
-                          </span>
-                          <span className="flex items-center gap-1.5 text-slate-500 text-[11px]">
-                            <Phone className="w-3 h-3 text-slate-400" /> {staff.phone}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-medium text-slate-700">
-                          {staff.section}
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                            Active
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => {
-                              if (window.confirm(`Are you sure you want to remove Account Officer ${staff.name} (${staff.account_code})?`)) {
-                                deleteAccountsStaff(staff.id);
-                              }
-                            }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-colors text-xs"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Delete</span>
-                          </button>
+                          <div>
+                            <h4 className="font-bold text-slate-900 text-sm">{staff.name}</h4>
+                            <span className="text-[10px] text-slate-500 block">{staff.designation}</span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-bold bg-white text-slate-600 px-2 py-0.5 rounded border border-slate-200">
+                          {staff.invoiceCount} ভাউচার
+                        </span>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-xl border border-slate-200/80 flex items-baseline justify-between">
+                        <span className="text-xs text-slate-500 font-semibold">মোট সংগৃহীত টাকা:</span>
+                        <span className="text-lg font-black text-emerald-700 font-mono">
+                          ৳ {staff.totalCollected.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600">
+                        <div className="bg-slate-100/70 p-2 rounded-lg">
+                          <span className="text-slate-400 block text-[10px]">নগদ আদায়</span>
+                          <span className="font-bold font-mono text-slate-800">৳ {staff.cashTotal.toLocaleString()}</span>
+                        </div>
+                        <div className="bg-slate-100/70 p-2 rounded-lg">
+                          <span className="text-slate-400 block text-[10px]">ডিজিটাল / কার্ড</span>
+                          <span className="font-bold font-mono text-slate-800">৳ {staff.digitalTotal.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setAccountsFilterStaff(isSelected ? 'ALL' : staff.code)}
+                        className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-emerald-700 text-white shadow-xs'
+                            : 'bg-white hover:bg-emerald-600 hover:text-white text-emerald-800 border border-emerald-200'
+                        }`}
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>{isSelected ? '✓ ফিল্টার সক্রিয় (Vouchers Listed)' : 'এই আইডির ভাউচার ফিল্টার করুন'}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* SECTION 2: VOUCHERS / INVOICES AUDIT LEDGER (কোন কোন ভাউচারে কত টাকা) */}
+            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <Receipt className="w-5 h-5 text-purple-600" />
+                    <span>কোন কোন ভাউচারে কত টাকা (Vouchers & Invoices Audit Ledger)</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    প্রতিটি মানি রিসিপ্ট / ভাউচারের বিস্তারিত বিবরণ, সংগৃহীত টাকা ও ক্যাশিয়ার আইডি
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-64">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search Voucher (INV-), Cashier, Patient..."
+                      value={accountsSearchQuery}
+                      onChange={(e) => setAccountsSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                    />
+                  </div>
+
+                  <select
+                    value={accountsFilterStaff}
+                    onChange={(e) => setAccountsFilterStaff(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs rounded-xl px-3 py-1.5 focus:bg-white focus:outline-none"
+                  >
+                    <option value="ALL">All Cashiers (সব কাউন্টার)</option>
+                    {staffCollectionList.map(s => (
+                      <option key={s.code} value={s.code}>{s.code} - {s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Invoices Ledger Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
+                      <th className="py-3 px-4">Voucher No & Date</th>
+                      <th className="py-3 px-4">Cashier (Account ID)</th>
+                      <th className="py-3 px-4">Patient Information</th>
+                      <th className="py-3 px-4">Billed Services / Tests</th>
+                      <th className="py-3 px-4 text-center">Payment Method</th>
+                      <th className="py-3 px-4 text-right">Voucher Amount (টাকা)</th>
+                      <th className="py-3 px-4 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                    {filteredAccountsInvoices.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="py-8 text-center text-slate-400">
+                          কোন ভাউচার বা রিসিপ্ট পাওয়া যায়নি।
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="py-8 text-center text-slate-400">
-                        No accounts staff registered yet. Click "Add Account Officer" to create one.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredAccountsInvoices.map((inv) => (
+                        <tr key={inv.id || inv.invoice_code} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3.5 px-4 font-mono">
+                            <span className="font-black text-purple-900 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-lg block w-max">
+                              {inv.invoice_code}
+                            </span>
+                            <span className="text-[10px] text-slate-400 mt-0.5 block">{inv.created_at || '2026-11-24'}</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px] inline-block mb-0.5">
+                              {inv.cashier_code || 'A101'}
+                            </span>
+                            <span className="font-bold text-slate-900 block text-xs">{inv.cashier_name || 'Counter Cashier'}</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-bold text-slate-900 block text-xs">{inv.patient_name}</span>
+                            <span className="font-mono text-[10px] text-cyan-800 font-bold bg-cyan-50 px-1.5 py-0.2 rounded border border-cyan-200 inline-block">
+                              {inv.patient_id || 'P01'}
+                            </span>
+                            {inv.patient_phone && (
+                              <span className="text-[10px] text-slate-500 ml-1.5">{inv.patient_phone}</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 max-w-[240px]">
+                            <div className="space-y-0.5">
+                              {inv.items && inv.items.slice(0, 2).map((item, idx) => (
+                                <span key={idx} className="text-[11px] text-slate-700 block truncate">
+                                  • {item.description} (৳{item.amount})
+                                </span>
+                              ))}
+                              {inv.items && inv.items.length > 2 && (
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  +{inv.items.length - 2} more items...
+                                </span>
+                              )}
+                              {inv.referred_doctor && (
+                                <span className="text-[10px] text-purple-700 font-bold block pt-0.5">
+                                  Ref: {inv.referred_doctor.name}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 border border-slate-200">
+                              <CreditCard className="w-3 h-3 text-emerald-600" />
+                              {inv.payment_method || 'Cash Counter'}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <span className="text-sm font-black text-emerald-800 font-mono">
+                              ৳ {Number(inv.total_amount).toLocaleString()}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <button
+                              type="button"
+                              onClick={() => setAdminViewingReceipt(inv)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-800 font-bold rounded-xl border border-purple-200 transition-colors text-xs"
+                            >
+                              <Receipt className="w-3.5 h-3.5" />
+                              <span>ভাউচার রশিদ</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
+
+            {/* SECTION 3: ACCOUNTS OFFICERS DIRECTORY & STAFF MANAGEMENT */}
+            <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900">Hospital Accounts Officers Roster</h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                      ID Prefix: A101+
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Admin can Add and Delete account officers. Each staff member gets an auto-incremented ID (e.g. A101, A102...) to login.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsAddAccountsModalOpen(true)}
+                  className="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
+                >
+                  <UserPlus className="w-4 h-4" /> Add Account Officer ({getNextAccountsCode()})
+                </button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
+                      <th className="py-3 px-4">Account ID</th>
+                      <th className="py-3 px-4">Staff Name & Designation</th>
+                      <th className="py-3 px-4">Contact Info</th>
+                      <th className="py-3 px-4">Assigned Section</th>
+                      <th className="py-3 px-4 text-center">Status</th>
+                      <th className="py-3 px-4 text-right">Delete Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-700">
+                    {accountsStaff.length > 0 ? (
+                      accountsStaff.map(staff => (
+                        <tr key={staff.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3.5 px-4">
+                            <span className="font-mono font-black text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs">
+                              {staff.account_code}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-bold text-slate-900 block text-sm">{staff.name}</span>
+                            <span className="text-slate-500 text-[11px]">{staff.designation}</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="flex items-center gap-1.5 text-slate-700">
+                              <Mail className="w-3 h-3 text-slate-400" /> {staff.email}
+                            </span>
+                            <span className="flex items-center gap-1.5 text-slate-500 text-[11px]">
+                              <Phone className="w-3 h-3 text-slate-400" /> {staff.phone}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 font-medium text-slate-700">
+                            {staff.section}
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                              Active
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              onClick={() => {
+                                if (window.confirm(`Are you sure you want to remove Account Officer ${staff.name} (${staff.account_code})?`)) {
+                                  deleteAccountsStaff(staff.id);
+                                }
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl border border-rose-200 transition-colors text-xs"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Delete</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="py-8 text-center text-slate-400">
+                          No accounts staff registered yet. Click "Add Account Officer" to create one.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -1856,6 +2119,175 @@ const AdminDashboard = ({ setActivePage }) => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: Admin View Official Money Receipt & Voucher */}
+      {adminViewingReceipt && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-6">
+            
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-emerald-800 to-teal-900 p-6 text-white flex justify-between items-start">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-bold">
+                    <Receipt className="w-4 h-4 text-emerald-200" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black tracking-wide">MEDICARE HOSPITAL & DIAGNOSTIC CENTER</h3>
+                    <p className="text-[10px] text-emerald-200">Official Cash Collection Receipt & Accounts Voucher</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminViewingReceipt(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Receipt Body */}
+            <div className="p-6 space-y-5 text-xs text-slate-700 bg-white" id="admin-printable-receipt">
+              
+              {/* Receipt & Voucher Meta */}
+              <div className="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Voucher / Invoice No</span>
+                  <span className="font-mono font-black text-sm text-purple-950 block">
+                    {adminViewingReceipt.invoice_code}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block">
+                    Date: <strong>{adminViewingReceipt.created_at || '2026-11-24'}</strong>
+                  </span>
+                </div>
+                <div className="space-y-1 text-right">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Cashier / Billing Counter</span>
+                  <span className="font-mono font-bold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block">
+                    {adminViewingReceipt.cashier_code || 'A101'}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-800 block">
+                    {adminViewingReceipt.cashier_name || 'Accounts Officer'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Patient & Doctor Meta */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50/60 rounded-2xl border border-slate-100">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Patient Details</span>
+                  <span className="font-extrabold text-slate-900 block text-xs">
+                    {adminViewingReceipt.patient_name}
+                  </span>
+                  <span className="font-mono text-[11px] font-bold text-cyan-800 block">
+                    ID: {adminViewingReceipt.patient_id}
+                  </span>
+                  {adminViewingReceipt.patient_phone && (
+                    <span className="text-[11px] text-slate-500 block">
+                      📞 {adminViewingReceipt.patient_phone}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1 sm:text-right">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold block">Referred By (পরামর্শক)</span>
+                  <span className="font-bold text-purple-900 block text-xs">
+                    {adminViewingReceipt.referred_doctor?.name || 'Hospital General OPD / Self'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block">
+                    Payment Method: <strong className="text-emerald-700">{adminViewingReceipt.payment_method || 'Cash Counter'}</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* Itemized Table */}
+              <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                      <th className="py-2.5 px-3">#</th>
+                      <th className="py-2.5 px-3">Service Description / Test Charge</th>
+                      <th className="py-2.5 px-3 text-right">Amount (৳)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {adminViewingReceipt.items && adminViewingReceipt.items.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50">
+                        <td className="py-2.5 px-3 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3 font-semibold text-slate-800">{item.description}</td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
+                          ৳ {Number(item.amount).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t border-slate-200 bg-slate-50/80">
+                      <td colSpan="2" className="py-2 px-3 text-right font-bold text-slate-600">Subtotal:</td>
+                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
+                        ৳ {Number(adminViewingReceipt.subtotal || adminViewingReceipt.total_amount).toLocaleString()}
+                      </td>
+                    </tr>
+                    {Number(adminViewingReceipt.discount_amount) > 0 && (
+                      <tr className="bg-slate-50/80 text-rose-600">
+                        <td colSpan="2" className="py-1 px-3 text-right font-bold text-xs">Discount:</td>
+                        <td className="py-1 px-3 text-right font-mono font-bold">
+                          - ৳ {Number(adminViewingReceipt.discount_amount).toLocaleString()}
+                        </td>
+                      </tr>
+                    )}
+                    <tr className="border-t-2 border-emerald-500 bg-emerald-50 text-emerald-950 font-black">
+                      <td colSpan="2" className="py-2.5 px-3 text-right text-xs">Net Amount Paid (সর্বমোট পরিশোধিত):</td>
+                      <td className="py-2.5 px-3 text-right font-mono text-base">
+                        ৳ {Number(adminViewingReceipt.total_amount).toLocaleString()}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Status & Hospital Seal */}
+              <div className="pt-4 border-t border-slate-200 flex justify-between items-center text-xs">
+                <div>
+                  <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-2.5 py-1 rounded-full text-[10px]">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> PAID IN FULL (পরিশোধিত)
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 block">Authorized Cashier Signature</span>
+                  <span className="font-mono font-bold text-xs text-slate-800">
+                    {adminViewingReceipt.cashier_code || 'A101'}
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Bottom Actions */}
+            <div className="bg-slate-100 p-4 border-t border-slate-200 flex items-center justify-between gap-3">
+              <span className="text-xs text-slate-500 font-medium">
+                Receipt: <strong className="font-mono text-purple-900">{adminViewingReceipt.invoice_code}</strong>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors shadow-sm"
+                >
+                  <Printer className="w-4 h-4" /> Print / Save Voucher PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdminViewingReceipt(null)}
+                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}

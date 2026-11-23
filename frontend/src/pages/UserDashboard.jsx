@@ -42,6 +42,7 @@ const UserDashboard = ({ setActivePage, onOpenTracker }) => {
     patientOrders,
     labBookings,
     prescriptions,
+    patientPrescriptions,
     labReports
   } = useData();
 
@@ -78,6 +79,7 @@ const UserDashboard = ({ setActivePage, onOpenTracker }) => {
   const [activeTab, setActiveTab] = useState('appointments'); // 'appointments' | 'prescriptions' | 'orders' | 'labs'
   const [selectedPrescription, setSelectedPrescription] = useState(null);
   const [viewingPatientReport, setViewingPatientReport] = useState(null);
+  const [viewingPatientPrescription, setViewingPatientPrescription] = useState(null);
   const [expandedTrackingId, setExpandedTrackingId] = useState(null);
 
   // Strict Patient Data Privacy Filter: A patient ONLY sees their own records matching their Patient ID or verified phone
@@ -394,6 +396,18 @@ const UserDashboard = ({ setActivePage, onOpenTracker }) => {
           </button>
 
           <button
+            onClick={() => setActiveTab('prescriptions')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
+              activeTab === 'prescriptions'
+                ? 'bg-purple-700 text-white shadow-md shadow-purple-700/20'
+                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            My Prescriptions (প্রেসক্রিপশন) ({(patientPrescriptions || []).length})
+          </button>
+
+          <button
             onClick={() => setActiveTab('orders')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs font-bold transition-all ${
               activeTab === 'orders'
@@ -519,6 +533,152 @@ const UserDashboard = ({ setActivePage, onOpenTracker }) => {
                   className="bg-cyan-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-sm"
                 >
                   Schedule Appointment
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: Digital Prescriptions & Clinical Advice */}
+        {activeTab === 'prescriptions' && (
+          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+              <div>
+                <h3 className="font-extrabold text-xl text-slate-900 flex items-center gap-2">
+                  <FileText className="w-6 h-6 text-purple-700" />
+                  <span>My Digital Prescriptions & Clinical Advice (আমার প্রেসক্রিপশন ও ডাক্তারি পরামর্শ)</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  ডাক্তার প্রেসক্রিপশন সাবমিট করার পর আপনার রোগীর আইডিতে ({user?.patient_id || 'P01'}) সরাসরি চলে আসে। এখান থেকে যেকোনো সময় অফিসিয়াল PDF ডাউনলোড বা প্রিন্ট করুন।
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs">
+                <span className="bg-purple-50 text-purple-800 border border-purple-200 px-3 py-1 rounded-xl font-bold font-mono">
+                  Prescriptions: {(patientPrescriptions || []).length}
+                </span>
+              </div>
+            </div>
+
+            {(patientPrescriptions || []).length > 0 ? (
+              <div className="space-y-4">
+                {(patientPrescriptions || []).map((rx) => (
+                  <div key={rx.id || rx.prescription_code} className="bg-gradient-to-br from-purple-50/40 via-white to-slate-50 p-6 rounded-3xl border border-purple-100 hover:border-purple-300 transition-all shadow-xs space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold shrink-0">
+                          <Stethoscope className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-extrabold text-slate-900 text-base">{rx.doctor_name}</h4>
+                            <span className="text-[10px] font-mono font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded border border-purple-200">
+                              {rx.doctor_code || 'D101'}
+                            </span>
+                          </div>
+                          <p className="text-xs font-semibold text-purple-700">{rx.doctor_specialty}</p>
+                        </div>
+                      </div>
+
+                      <div className="text-left sm:text-right">
+                        <span className="text-xs font-mono font-bold text-slate-900 bg-white border border-slate-200 px-2.5 py-1 rounded-lg block sm:inline-block">
+                          Rx Code: {rx.prescription_code}
+                        </span>
+                        <span className="text-[11px] text-slate-400 block mt-1 font-mono">Date: {rx.date}</span>
+                      </div>
+                    </div>
+
+                    {/* Vitals & Clinical Assessment */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs bg-white p-3.5 rounded-2xl border border-slate-200/80">
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-medium">Patient ID:</span>
+                        <span className="font-bold font-mono text-cyan-700">{rx.patient_id} ({rx.patient_name})</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-medium">Blood Pressure (BP):</span>
+                        <span className="font-bold text-slate-800">{rx.vitals?.bp || '120/80 mmHg'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-medium">Pulse Rate:</span>
+                        <span className="font-bold text-slate-800">{rx.vitals?.pulse || '74 bpm'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 block text-[10px] font-medium">Clinical Diagnosis:</span>
+                        <span className="font-bold text-purple-900 truncate block">{rx.diagnosis || 'Clinical Follow-up'}</span>
+                      </div>
+                    </div>
+
+                    {/* Prescribed Medicines Summary */}
+                    {rx.medicines && rx.medicines.length > 0 && (
+                      <div className="space-y-1.5">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Prescribed Medicines ({rx.medicines.length}):
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {rx.medicines.map((m, mIdx) => (
+                            <span key={mIdx} className="bg-white border border-slate-200 text-slate-800 text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs font-medium">
+                              <Pill className="w-3.5 h-3.5 text-purple-600" />
+                              <strong className="text-slate-900">{m.name}</strong>
+                              <span className="text-slate-500 font-mono text-[11px]">({m.dosage} • {m.duration})</span>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tests Advised */}
+                    {rx.tests_advised && rx.tests_advised.length > 0 && (
+                      <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1">
+                            <FlaskConical className="w-3.5 h-3.5 text-blue-600" /> Advised Diagnostic Investigations (ল্যাব টেস্ট পরামর্শ):
+                          </span>
+                          <span className="font-semibold text-slate-800">
+                            {Array.isArray(rx.tests_advised) ? rx.tests_advised.join(', ') : rx.tests_advised}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('labs')}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1 rounded-xl text-[11px] shadow-2xs shrink-0 transition-all"
+                        >
+                          View / Book Tests
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Bottom Action Bar */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                      <div className="text-[11px] text-slate-500">
+                        {rx.follow_up && <span>Next Follow-up: <strong>{rx.follow_up}</strong> • </span>}
+                        <span>Issued via MediCare Electronic Prescription Portal</span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setViewingPatientPrescription(rx)}
+                        className="flex items-center justify-center gap-2 bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-2.5 rounded-2xl text-xs shadow-md shadow-purple-700/20 transition-all active:scale-95"
+                      >
+                        <Printer className="w-4 h-4" />
+                        <span>View & Download Official Prescription (ডাউনলোড করুন)</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-12 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200 space-y-3">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto" />
+                <h4 className="font-bold text-slate-800">No Prescriptions Issued Yet</h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  আপনার পেশেন্ট আইডির ({user?.patient_id || 'P01'}) বিপরীতে ডাক্তার যখন প্রেসক্রিপশন সাবমিট করবেন, তখন তা এখানে স্বয়ংক্রিয়ভাবে চলে আসবে এবং আপনি ডাউনলোড করতে পারবেন।
+                </p>
+                <button
+                  type="button"
+                  onClick={() => openBookingModal()}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
+                >
+                  Consult with a Specialist Doctor
                 </button>
               </div>
             )}
@@ -1062,6 +1222,236 @@ const UserDashboard = ({ setActivePage, onOpenTracker }) => {
                 <button
                   type="button"
                   onClick={() => setViewingPatientReport(null)}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-rose-600/20 transition-all"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Close (কেটে দিন)</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Official Verified Patient Digital Prescription Download Modal */}
+      {viewingPatientPrescription && (
+        <div 
+          onClick={(e) => { if (e.target === e.currentTarget) setViewingPatientPrescription(null); }}
+          className="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-6 animate-in fade-in zoom-in duration-150">
+            
+            {/* Modal Top Bar */}
+            <div className="bg-slate-900 px-6 py-3.5 text-white flex justify-between items-center text-xs">
+              <span className="font-bold flex items-center gap-1.5 text-purple-300">
+                <ShieldCheck className="w-4 h-4 text-purple-400" />
+                <span>Official Hospital Digital Prescription ({viewingPatientPrescription.prescription_code})</span>
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center gap-1.5 bg-purple-700 hover:bg-purple-800 text-white px-3.5 py-1.5 rounded-xl font-bold transition-all shadow-sm"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print / Download PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingPatientPrescription(null)}
+                  className="flex items-center gap-1 bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Close (কেটে দিন)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Document Sheet */}
+            <div className="p-6 sm:p-8 space-y-6 text-slate-800 bg-white" id="printable-patient-prescription">
+              
+              {/* Header Letterhead */}
+              <div className="border-b-2 border-purple-900 pb-4 flex justify-between items-start">
+                <div>
+                  <div className="text-2xl font-black text-slate-900 tracking-tight">
+                    Medi<span className="text-cyan-600">Care</span> Hub Hospital
+                  </div>
+                  <p className="text-xs text-slate-600 font-semibold">Central Medical Chambers & Specialist Consultation Services</p>
+                  <span className="text-[11px] text-slate-400 block mt-0.5">
+                    Govt. Reg # DH-9042 • 24/7 Medical Helpline: +880 1700-112233 • Dhaka, Bangladesh
+                  </span>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-xs font-mono font-bold text-purple-900 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200">
+                    {viewingPatientPrescription.prescription_code}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-1 font-mono">Date: {viewingPatientPrescription.date}</span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mt-1 inline-block">
+                    ✓ Verified Digital Rx
+                  </span>
+                </div>
+              </div>
+
+              {/* Doctor Details */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3 text-xs">
+                <div>
+                  <h4 className="text-base font-extrabold text-slate-900">{viewingPatientPrescription.doctor_name}</h4>
+                  <p className="text-purple-700 font-bold text-xs">{viewingPatientPrescription.doctor_specialty}</p>
+                  <span className="text-[11px] text-slate-500">Chamber: Room 304, 3rd Floor • BMDC Reg # 48921</span>
+                </div>
+                <div className="text-left sm:text-right">
+                  <span className="font-mono font-bold text-xs bg-purple-50 text-purple-800 border border-purple-200 px-2 py-0.5 rounded">
+                    Doctor ID: {viewingPatientPrescription.doctor_code || 'D101'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Patient Meta Box */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-medium">Patient Full Name:</span>
+                  <span className="font-bold text-slate-900 text-sm">{viewingPatientPrescription.patient_name}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-medium">Permanent Patient ID:</span>
+                  <span className="font-bold font-mono text-cyan-700 text-sm">{viewingPatientPrescription.patient_id}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-medium">Contact Phone:</span>
+                  <span className="font-bold font-mono text-slate-800">{viewingPatientPrescription.patient_phone || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px] font-medium">Age & Gender:</span>
+                  <span className="font-bold text-slate-800">{viewingPatientPrescription.patient_age || 42} Y • {viewingPatientPrescription.patient_gender || 'Male'}</span>
+                </div>
+              </div>
+
+              {/* Vitals Strip */}
+              {viewingPatientPrescription.vitals && (
+                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-medium">BP:</span>
+                    <span className="font-bold text-slate-800">{viewingPatientPrescription.vitals.bp || '120/80 mmHg'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-medium">Pulse:</span>
+                    <span className="font-bold text-slate-800">{viewingPatientPrescription.vitals.pulse || '74 bpm'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-medium">Weight:</span>
+                    <span className="font-bold text-slate-800">{viewingPatientPrescription.vitals.weight || '70 kg'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-medium">Temp:</span>
+                    <span className="font-bold text-slate-800">{viewingPatientPrescription.vitals.temp || '98.4°F'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[10px] block font-medium">Blood Sugar:</span>
+                    <span className="font-bold text-slate-800">{viewingPatientPrescription.vitals.sugar || '5.6 mmol/L'}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Clinical Diagnosis */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                <span className="font-bold text-slate-900 block mb-0.5">Clinical Diagnosis / রোগ নির্ণয়:</span>
+                <p className="font-semibold text-purple-900">{viewingPatientPrescription.diagnosis || 'General Clinical Assessment'}</p>
+              </div>
+
+              {/* Prescribed Medicines (Rx) */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-black text-slate-900 border-b border-slate-200 pb-1">
+                  <span className="text-xl font-serif italic text-purple-800">℞</span>
+                  <span>Prescribed Medications & Dosage Schedule</span>
+                </div>
+
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="bg-purple-50 text-purple-950 font-bold uppercase border-b border-purple-200 text-[11px]">
+                      <th className="py-2.5 px-3">#</th>
+                      <th className="py-2.5 px-3">Medicine Name & Formulation</th>
+                      <th className="py-2.5 px-3 text-center">Dosage Frequency</th>
+                      <th className="py-2.5 px-3 text-center">Duration</th>
+                      <th className="py-2.5 px-3 text-right">Instructions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {viewingPatientPrescription.medicines?.map((med, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-3 font-bold text-slate-400">{idx + 1}</td>
+                        <td className="py-2.5 px-3 font-bold text-slate-900">{med.name}</td>
+                        <td className="py-2.5 px-3 text-center font-mono font-bold text-purple-900 bg-purple-50/30">{med.dosage}</td>
+                        <td className="py-2.5 px-3 text-center text-slate-600 font-medium">{med.duration}</td>
+                        <td className="py-2.5 px-3 text-right text-slate-700 font-semibold">{med.instruction}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Investigations Advised */}
+              {viewingPatientPrescription.tests_advised && viewingPatientPrescription.tests_advised.length > 0 && (
+                <div className="p-3.5 bg-blue-50/80 rounded-xl border border-blue-200 text-xs space-y-1">
+                  <span className="font-bold text-blue-950 block flex items-center gap-1.5">
+                    <FlaskConical className="w-3.5 h-3.5 text-blue-600" /> Recommended Diagnostic Lab Tests:
+                  </span>
+                  <p className="font-semibold text-slate-800">
+                    {Array.isArray(viewingPatientPrescription.tests_advised) 
+                      ? viewingPatientPrescription.tests_advised.join(', ') 
+                      : viewingPatientPrescription.tests_advised}
+                  </p>
+                </div>
+              )}
+
+              {/* Advice & Instructions */}
+              {viewingPatientPrescription.advice && (
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+                  <span className="font-bold text-slate-900 block">Doctor's Advice & Dietary Guidelines:</span>
+                  <p className="text-slate-700 leading-relaxed">{viewingPatientPrescription.advice}</p>
+                  {viewingPatientPrescription.follow_up && (
+                    <span className="block text-[11px] font-bold text-purple-800 pt-1">
+                      Next Follow-up Appointment: {viewingPatientPrescription.follow_up}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Digital Seal & Signatures */}
+              <div className="pt-6 border-t border-slate-200 flex justify-between items-end text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 block">Official End of Prescription</span>
+                  <span className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 mt-0.5">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Digitally Authenticated via MediCare Central Hospital EHR
+                  </span>
+                </div>
+                <div className="text-right">
+                  <div className="font-signature text-purple-900 font-bold text-base italic">
+                    {viewingPatientPrescription.doctor_name}
+                  </div>
+                  <span className="border-t border-slate-400 pt-0.5 text-[10px] text-slate-500 block">
+                    Specialist Consultant Signature
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom Modal Action Footer */}
+            <div className="bg-slate-100 p-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <span className="text-xs text-slate-600 font-medium">
+                Rx Code: <strong className="font-mono text-purple-900">{viewingPatientPrescription.prescription_code}</strong> • Patient: <strong>{viewingPatientPrescription.patient_name}</strong> ({viewingPatientPrescription.patient_id})
+              </span>
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition-colors shadow-sm"
+                >
+                  <Printer className="w-4 h-4" /> Print / Save Official PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewingPatientPrescription(null)}
                   className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md shadow-rose-600/20 transition-all"
                 >
                   <X className="w-4 h-4" />
