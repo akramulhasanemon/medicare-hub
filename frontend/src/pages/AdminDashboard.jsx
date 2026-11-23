@@ -57,7 +57,8 @@ const AdminDashboard = ({ setActivePage }) => {
     labBookings,
     updateLabBookingStatus,
     ambulanceRequests,
-    updateAmbulanceStatus
+    updateAmbulanceStatus,
+    invoices
   } = useData();
 
   // Strict Access Control Guard - Only Admin allowed
@@ -102,6 +103,72 @@ const AdminDashboard = ({ setActivePage }) => {
   const [isAddLabModalOpen, setIsAddLabModalOpen] = useState(false);
   const [isAddAccountsModalOpen, setIsAddAccountsModalOpen] = useState(false);
   const [isAddPatientModalOpen, setIsAddPatientModalOpen] = useState(false);
+
+  // Accounts & Vouchers Section State
+  const [adminViewingReceipt, setAdminViewingReceipt] = useState(null);
+  const [accountsFilterStaff, setAccountsFilterStaff] = useState('ALL');
+  const [accountsSearchQuery, setAccountsSearchQuery] = useState('');
+
+  // Accounts Revenue Calculations & Groupings
+  const allInvoices = invoices || [];
+  const grandAccountsRevenue = allInvoices.reduce((sum, inv) => sum + (Number(inv.total_amount) || 0), 0);
+
+  // Group by Cashier Staff Code (A101, A102, A103)
+  const staffMap = {};
+  (accountsStaff || []).forEach(staff => {
+    const code = staff.account_code || `A${staff.id}`;
+    staffMap[code] = {
+      ...staff,
+      code,
+      totalCollected: 0,
+      invoiceCount: 0,
+      cashTotal: 0,
+      digitalTotal: 0,
+      invoices: []
+    };
+  });
+
+  allInvoices.forEach(inv => {
+    const code = inv.cashier_code || 'A101';
+    if (!staffMap[code]) {
+      staffMap[code] = {
+        code,
+        name: inv.cashier_name || 'Cashier Counter',
+        designation: 'Accounts Officer',
+        totalCollected: 0,
+        invoiceCount: 0,
+        cashTotal: 0,
+        digitalTotal: 0,
+        invoices: []
+      };
+    }
+    const amt = Number(inv.total_amount) || 0;
+    staffMap[code].totalCollected += amt;
+    staffMap[code].invoiceCount += 1;
+    staffMap[code].invoices.push(inv);
+    if (/cash/i.test(inv.payment_method || '')) {
+      staffMap[code].cashTotal += amt;
+    } else {
+      staffMap[code].digitalTotal += amt;
+    }
+  });
+
+  const staffCollectionList = Object.values(staffMap);
+
+  const filteredAccountsInvoices = allInvoices.filter(inv => {
+    const matchesFilter = accountsFilterStaff === 'ALL' || (inv.cashier_code && inv.cashier_code.toUpperCase() === accountsFilterStaff.toUpperCase());
+    if (!matchesFilter) return false;
+    if (!accountsSearchQuery.trim()) return true;
+    const q = accountsSearchQuery.trim().toUpperCase();
+    return (
+      (inv.invoice_code && inv.invoice_code.toUpperCase().includes(q)) ||
+      (inv.cashier_code && inv.cashier_code.toUpperCase().includes(q)) ||
+      (inv.cashier_name && inv.cashier_name.toUpperCase().includes(q)) ||
+      (inv.patient_id && inv.patient_id.toUpperCase().includes(q)) ||
+      (inv.patient_name && inv.patient_name.toUpperCase().includes(q)) ||
+      (inv.payment_method && inv.payment_method.toUpperCase().includes(q))
+    );
+  });
 
   // Patients Directory State across database & registered users
   const getRegisteredPatients = () => {
