@@ -31,7 +31,7 @@ import {
 
 const DoctorPortal = ({ setActivePage }) => {
   const { user } = useAuth();
-  const { appointments, updateAppointmentStatus, prescriptions, issuePrescription, medicines } = useData();
+  const { appointments, updateAppointmentStatus, prescriptions, issuePrescription, medicines, doctors } = useData();
 
   // Access Control Guard
   if (!user || (user.role !== 'doctor' && user.role !== 'admin')) {
@@ -80,26 +80,83 @@ const DoctorPortal = ({ setActivePage }) => {
     followUp: '7 Days later'
   });
 
-  // Doctor Info
-  const doctorName = user?.name || 'Prof. Dr. Mahfuzur Rahman';
-  const doctorCode = user?.patient_id || user?.doctor_code || 'D101';
-  const doctorSpecialty = user?.specialty || 'Cardiologist & Internal Medicine Specialist';
+  // Accurately resolve logged-in doctor profile from hospital directory
+  const currentDoctorProfile = (doctors || []).find(d => {
+    const uCode = String(user?.patient_id || user?.doctor_code || '').trim().toUpperCase();
+    const dCode = String(d.doctor_code || `D${100 + d.id}`).trim().toUpperCase();
+    if (uCode && dCode && uCode === dCode) return true;
 
-  // Appointments for this doctor
-  const doctorAppointments = appointments.filter(a => 
-    a.doctor_name?.toLowerCase().includes(doctorName.toLowerCase()) || 
-    user.role === 'admin' || 
-    true // For demo, allow doctor to consult all hospital queue
-  );
+    const uName = String(user?.name || '').trim().toLowerCase().replace(/^(prof\.|dr\.)\s*/, '');
+    const dName = String(d.name || '').trim().toLowerCase().replace(/^(prof\.|dr\.)\s*/, '');
+    if (uName && dName && (uName === dName || dName.includes(uName) || uName.includes(dName))) return true;
+
+    return false;
+  });
+
+  const doctorName = currentDoctorProfile?.name || user?.name || 'Specialist Doctor';
+  const doctorCode = currentDoctorProfile?.doctor_code || user?.patient_id || user?.doctor_code || 'D101';
+  const doctorSpecialty = currentDoctorProfile?.specialty || user?.specialty || 'Consultant Specialist';
+  const doctorFee = currentDoctorProfile?.consultation_fee || user?.consultation_fee || 1200;
+
+  // STRICT PRIVACY: Appointments ONLY for this logged-in doctor (অন্য ডাক্তারের রোগী শো করবে না)
+  const doctorAppointments = (appointments || []).filter(a => {
+    if (!a) return false;
+
+    // 1. Match by doctor_code
+    const aDocCode = String(a.doctor_code || '').trim().toUpperCase();
+    const myDocCode = String(doctorCode || '').trim().toUpperCase();
+    if (aDocCode && myDocCode && aDocCode === myDocCode) {
+      return true;
+    }
+
+    // 2. Match by doctor_id
+    if (currentDoctorProfile && a.doctor_id && Number(a.doctor_id) === Number(currentDoctorProfile.id)) {
+      return true;
+    }
+
+    // 3. Match by doctor_name
+    if (a.doctor_name && doctorName) {
+      const cleanA = a.doctor_name.toLowerCase().replace(/^(prof\.|dr\.)\s*/, '').trim();
+      const cleanDoc = doctorName.toLowerCase().replace(/^(prof\.|dr\.)\s*/, '').trim();
+      if (cleanA && cleanDoc && (cleanA === cleanDoc || cleanA.includes(cleanDoc) || cleanDoc.includes(cleanA))) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+
+  // STRICT PRIVACY: Digital Prescriptions ONLY issued by this logged-in doctor
+  const doctorPrescriptions = (prescriptions || []).filter(rx => {
+    if (!rx) return false;
+
+    // 1. Match by doctor_code
+    const rxDocCode = String(rx.doctor_code || '').trim().toUpperCase();
+    const myDocCode = String(doctorCode || '').trim().toUpperCase();
+    if (rxDocCode && myDocCode && rxDocCode === myDocCode) {
+      return true;
+    }
+
+    // 2. Match by doctor_name
+    if (rx.doctor_name && doctorName) {
+      const cleanRx = rx.doctor_name.toLowerCase().replace(/^(prof\.|dr\.)\s*/, '').trim();
+      const cleanDoc = doctorName.toLowerCase().replace(/^(prof\.|dr\.)\s*/, '').trim();
+      if (cleanRx && cleanDoc && (cleanRx === cleanDoc || cleanRx.includes(cleanDoc) || cleanDoc.includes(cleanRx))) {
+        return true;
+      }
+    }
+
+    return false;
+  });
 
   const waitingQueue = doctorAppointments.filter(a => a.status === 'confirmed' || a.status === 'pending');
   const completedQueue = doctorAppointments.filter(a => a.status === 'completed');
 
   // Filtered queue
   const filteredQueue = waitingQueue.filter(a => 
-    a.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (a.patient_name && a.patient_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (a.patient_code && a.patient_code.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    a.patient_phone.includes(searchTerm)
+    (a.patient_phone && a.patient_phone.includes(searchTerm))
   );
 
   const handleOpenRxModal = (app) => {
@@ -278,7 +335,7 @@ const DoctorPortal = ({ setActivePage }) => {
               <span>E-Prescriptions</span>
               <FileText className="w-4 h-4 text-purple-600" />
             </div>
-            <div className="text-3xl font-black text-slate-900">{prescriptions.length}</div>
+            <div className="text-3xl font-black text-slate-900">{doctorPrescriptions.length}</div>
             <p className="text-[11px] text-purple-600 font-semibold mt-1">Digital Rx issued</p>
           </div>
 
@@ -287,7 +344,7 @@ const DoctorPortal = ({ setActivePage }) => {
               <span>Doctor Revenue</span>
               <DollarSign className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-3xl font-black text-slate-900">৳ {(completedQueue.length * 1200 + 1200).toLocaleString()}</div>
+            <div className="text-3xl font-black text-slate-900">৳ {(completedQueue.length * doctorFee).toLocaleString()}</div>
             <p className="text-[11px] text-emerald-600 font-semibold mt-1">Consultation fee billings</p>
           </div>
         </div>
@@ -315,7 +372,7 @@ const DoctorPortal = ({ setActivePage }) => {
             }`}
           >
             <FileText className="w-4 h-4" />
-            Digital Rx Archive ({prescriptions.length})
+            Digital Rx Archive ({doctorPrescriptions.length})
           </button>
 
           <button
@@ -436,33 +493,41 @@ const DoctorPortal = ({ setActivePage }) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {prescriptions.map(rx => (
-                <div key={rx.id} className="p-5 rounded-2xl border border-slate-200 hover:border-purple-300 transition-all bg-slate-50/50 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-xs font-mono font-black text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-lg">
-                        {rx.prescription_code}
-                      </span>
-                      <h4 className="font-bold text-slate-900 text-base mt-1">{rx.patient_name}</h4>
-                      <span className="text-xs text-slate-500 font-mono">Patient ID: {rx.patient_id} • {rx.date}</span>
+            {doctorPrescriptions.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 space-y-2">
+                <FileText className="w-8 h-8 text-slate-300 mx-auto" />
+                <p className="font-medium text-xs">No digital prescriptions issued by {doctorName} yet.</p>
+                <p className="text-[11px] text-slate-400">Consult waiting patients from the queue to issue new E-Prescriptions.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {doctorPrescriptions.map(rx => (
+                  <div key={rx.id} className="p-5 rounded-2xl border border-slate-200 hover:border-purple-300 transition-all bg-slate-50/50 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-mono font-black text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-lg">
+                          {rx.prescription_code}
+                        </span>
+                        <h4 className="font-bold text-slate-900 text-base mt-1">{rx.patient_name}</h4>
+                        <span className="text-xs text-slate-500 font-mono">Patient ID: {rx.patient_id} • {rx.date}</span>
+                      </div>
+                      <button
+                        onClick={() => setViewingPrescription(rx)}
+                        className="flex items-center gap-1 text-xs font-bold text-purple-700 hover:text-purple-800 bg-white border border-purple-200 px-3 py-1.5 rounded-xl shadow-sm hover:bg-purple-50 transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View & Print</span>
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setViewingPrescription(rx)}
-                      className="flex items-center gap-1 text-xs font-bold text-purple-700 hover:text-purple-800 bg-white border border-purple-200 px-3 py-1.5 rounded-xl shadow-sm hover:bg-purple-50 transition-colors"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>View & Print</span>
-                    </button>
-                  </div>
 
-                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 text-xs space-y-1">
-                    <p className="text-slate-700"><strong>Diagnosis:</strong> {rx.diagnosis}</p>
-                    <p className="text-slate-500"><strong>Prescribed:</strong> {rx.medicines?.length || 0} Medicines ({rx.medicines?.map(m => m.name).join(', ')})</p>
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/70 text-xs space-y-1">
+                      <p className="text-slate-700"><strong>Diagnosis:</strong> {rx.diagnosis}</p>
+                      <p className="text-slate-500"><strong>Prescribed:</strong> {rx.medicines?.length || 0} Medicines ({rx.medicines?.map(m => m.name).join(', ')})</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
