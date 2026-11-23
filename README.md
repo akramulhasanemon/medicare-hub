@@ -1,123 +1,113 @@
-# 🏥 MediCare Hub - Modern Medical & Healthcare Web Application
+# 🏥 MediCare Hub - Smart Hospital & Healthcare Management System
 
-A full-stack, modern healthcare and clinic management web portal built with **React**, **Tailwind CSS**, **PHP REST API**, and **MySQL**.
+A full-stack, enterprise-grade healthcare management portal built with **React 18**, **Tailwind CSS**, **PHP REST API**, and **MySQL**.
 
----
-
-## 🌟 Features (মূল সুবিধাসমূহ)
-
-### 1. 👥 Patient Portal (রোগী ও সাধারণ ইউজার)
-- **Modern Landing Page**: আকর্ষক হিরো সেকশন, স্পেশালিটি ডিপার্টমেন্ট কার্ড, টপ-রেটেড ডাক্তারদের তালিকা।
-- **Doctor Directory**: ডিপার্টমেন্ট অনুসারে ফিল্টার এবং নাম বা ডিগ্রি দিয়ে লাইভ সার্চ সুবিধা।
-- **Instant Slot Booking**: ডাক্তার নির্বাচন করে তারিখ, সময় এবং সমস্যার লক্ষণ (Symptoms) দিয়ে তাৎক্ষণিক অ্যাপয়েন্টমেন্ট বুকিং।
-- **User Dashboard**:
-  - নিজের বুক করা সকল অ্যাপয়েন্টমেন্টের রিয়েল-টাইম স্ট্যাটাস (Pending, Confirmed, Completed, Cancelled)।
-  - ক্লিনিক থেকে দেওয়া ডিজিটাল প্রেসক্রিপশন / চেম্বার স্লিপ দেখা ও PDF প্রিন্ট করার সুবিধা।
-
-### 2. 🛡️ Admin Dashboard (অ্যাডমিন প্যানেল)
-- **Live Metrics**: মোট অ্যাপয়েন্টমেন্ট, পেন্ডিং রিকোয়েস্ট, কনফার্মড স্লট, সক্রিয় ডাক্তার সংখ্যা এবং আনুমানিক রেভিনিউ গণনা।
-- **Appointment Manager**:
-  - নতুন অ্যাপয়েন্টমেন্ট অনুমোদন (Approve / Confirm Slot)।
-  - রিজেক্ট / বাতিলকরণ (Cancel) অথবা সমাপ্ত ঘোষণা (Complete)।
-  - রোগীর জন্য নির্দেশিকা ও চেম্বার রুম নম্বর (Notes) যুক্ত ও এডিট করার সুবিধা।
-- **Doctor Roster & Management**:
-  - নতুন বিশেষজ্ঞ ডাক্তারের প্রোফাইল, ডিগ্রি, ভিজিট ফি ও শিডিউল যুক্ত করার সুবিধা।
-  - বর্তমান ডাক্তারদের তালিকা ও বিস্তারিত তথ্য।
-
-### 3. 🔐 Authentication & Security
-- **Role-based Authentication**: সাধারণ রোগী ও অ্যাডমিনের জন্য আলাদা সিকিউর লগইন সিস্টেম।
-- **1-Click Demo Login**: সহজে টেস্ট করার জন্য ১-ক্লিকেই ডেমো পেশেন্ট বা ডেমো অ্যাডমিন ক্রেডেনশিয়াল পূরণ করার সুবিধা।
-- **PHP REST API & PDO**: SQL Injection প্রটেক্টেড এবং CORS সাপোর্টেড ব্যাকএন্ড।
+[![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/akramulhasanemon/medicare-hub)
+[![React](https://img.shields.io/badge/React-18.x-cyan?logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.x-purple?logo=vite)](https://vitejs.dev/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.x-teal?logo=tailwindcss)](https://tailwindcss.com/)
 
 ---
 
-## 🛠️ Tech Stack (ব্যবহৃত প্রযুক্তি)
+## 🌟 Core Modules & Portals (প্রধান সুবিধাসমূহ)
+
+### 1. 👥 Patient Portal (`PID`)
+- **Interactive Medical Vault**: বুক করা সকল ডাক্তার অ্যাপয়েন্টমেন্টের স্ট্যাটাস ট্র্যাকিং।
+- **Diagnostic Lab Test Records**: অটোমেটিক সিকোয়েন্সিয়াল টেস্ট আইডি (যেমন `LAB-112233`), নমুনা সংগ্রহের স্ট্যাটাস এবং ফুল প্যাথলজি রিপোর্ট দেখা ও প্রিন্ট করার সুবিধা।
+- **Strict Privacy Isolation**: শুধুমাত্র সংশ্লিষ্ট রোগীর আইডি (`PID`) অথবা ভেরিফাইড ফোন নাম্বারের রিপোর্ট ও প্রেসক্রিপশন সংরক্ষিত থাকে।
+- **Digital Health Vitals**: রিয়েল-টাইম লাইভ ইসিজি টেলিমেট্রি এবং ভাইটালস মনিটর (BP, SpO2, Heart Rate, Blood Sugar, Temperature)।
+
+### 2. 🧪 Pathology & Diagnostic Lab Portal (`LID` / `TID`)
+- **Sequential Lab Test Processing**: টেস্টের ধরন অনুযায়ী স্বয়ংক্রিয় ইউনিক টেস্ট নম্বর (CBC: 112233, Creatinine: 112234 ইত্যাদি)।
+- **Specimen Tracking**: Blood, Urine, Serum ট্র্যাকিং এবং স্পেসিমেন কালেক্টেড স্ট্যাটাস।
+- **Standardized Medical Investigation Catalog**: ২৯টি মানসম্পন্ন হাসপাতাল ইনভেস্টিগেশন (CBC with ESR, Serum Creatinine, Lipid Profile, LFT, Dengue NS1, HbA1c ইত্যাদি)।
+- **Official Pathology Report Generator**: নরমাল রেফারেন্স রেঞ্জ, ফ্ল্যাগ ও সিনিয়র প্যাথলজিস্ট ভেরিফিকেশন সহ এ-৪ সাইজে প্রেসক্রিপশন ও টেস্ট রিপোর্ট প্রিন্টআউট।
+
+### 3. 💳 Accounts Counter & POS Billing (`AID`)
+- **Universal Multi-Entity Search**: যেকোনো আইডি দিয়ে তাৎক্ষণিক অনুসন্ধান (`PID` = Patient, `DID` = Doctor, `TID` = Test/Token, `AID` = Staff Cashier)।
+- **Smart Percentage Discount**: ০%, ৫%, ১০%, ১৫%, ২০%, ২৫%, ৫০% প্রি-সেট ডিসকাউন্ট চিপ এবং লাইভ টাকা ডিসকাউন্ট হিসাব।
+- **Instant Money Receipt**: বারকোড, ক্যাশিয়ার আইডি ও পেইড সিল সহ অফিশিয়াল ইনভয়েস জেনারেশন ও প্রিন্ট।
+- **Lab Auto-Sync**: একাউন্টস থেকে টেস্টের ফি আদায় ও সাবমিট করার সাথে সাথেই তা স্বয়ংক্রিয়ভাবে ল্যাব পোর্টালে ইনভেস্টিগেশনের তালিকায় যুক্ত হয়।
+
+### 4. 👨‍⚕️ Specialist Doctor Portal (`DID`)
+- কনসাল্টেশন শিডিউল, রোগীর সমস্যা ও ডিজিটাল প্রেসক্রিপশন প্রদান।
+- চেম্বার স্লিপ এবং নির্দেশিকা সংযোজন।
+
+### 5. 💊 Online Pharmacy & Medicine Delivery
+- প্রেসক্রিপশন ড্রাগ ও ওটিসি মেডিসিন কার্ট ও ডেলিভারি ট্র্যাকিং।
+
+### 6. 🛡️ Hospital Admin Control Center
+- রিয়েল-টাইম রেভিনিউ, সক্রিয় ডাক্তার, প্যাথলজিস্ট এবং একাউন্টস কর্মীদের রোস্টার ম্যানেজমেন্ট।
+
+---
+
+## 🛠️ Tech Stack
 
 | Layer | Technologies |
 |---|---|
-| **Frontend** | React 18, Vite, Tailwind CSS, Lucide React (Icons) |
-| **Backend** | PHP 8 (RESTful JSON API with PDO) |
+| **Frontend** | React 18, Vite, Tailwind CSS, Lucide React, Framer-ready CSS Animations |
+| **Backend** | PHP 8 RESTful JSON API with PDO & CORS handling |
 | **Database** | MySQL (Relational Schema with Foreign Keys) |
+| **Persistence** | Real-time state with LocalStorage fallback & offline resilience |
 
 ---
 
-## 📁 Project Structure (ফোল্ডার পরিচিতি)
+## 📁 Project Structure
 
 ```text
 medicare-hub/
-├── frontend/                     # React + Tailwind CSS ক্লায়েন্ট
+├── frontend/                     # React 18 + Tailwind CSS
 │   ├── src/
-│   │   ├── components/           # Navbar, Footer, Hero, Services, DoctorCard, AppointmentModal
-│   │   ├── pages/                # Home, Doctors, Login, Register, UserDashboard, AdminDashboard
-│   │   ├── context/              # AuthContext, DataContext (State & LocalStorage sync)
-│   │   ├── data/                 # Default mock doctors & appointments data
-│   │   ├── App.jsx
+│   │   ├── components/           # Navbar, Footer, Hero, Services, DoctorCard, AppointmentModal, QuickReportTrackerModal, FloatingQuickActionDial, ProfileSettingsView
+│   │   ├── pages/                # Home, Doctors, Pharmacy, LabTests, SymptomChecker, HealthTools, Login, Register, UserDashboard, AdminDashboard, DoctorPortal, LabPortal, AccountsPortal
+│   │   ├── context/              # AuthContext, DataContext
+│   │   ├── data/                 # mockData.js (Standard test investigations, default doctors, initial catalog)
+│   │   ├── App.jsx               # ErrorBoundary, Global Routing & Protected Portals
 │   │   ├── main.jsx
-│   │   └── index.css
+│   │   └── index.css             # Medical theme, animations & print media CSS
 │   ├── package.json
 │   ├── tailwind.config.js
 │   └── vite.config.js
 │
 ├── backend/                      # PHP REST API
-│   ├── config/
-│   │   └── database.php          # MySQL PDO Connection & CORS setup
-│   ├── api/
-│   │   ├── login.php             # User & Admin Login endpoint
-│   │   ├── register.php          # Patient registration endpoint
-│   │   ├── doctors.php           # GET / POST doctors
-│   │   ├── appointments.php      # GET / POST appointments
-│   │   ├── admin_stats.php       # Dashboard metrics & analytics
-│   │   └── update_appointment.php# Update appointment status & notes
-│   └── database/
-│       └── schema.sql            # Full MySQL schema & initial seed data
+│   ├── config/database.php       # MySQL PDO Connection
+│   ├── api/                      # Auth, Doctors, Appointments, Admin stats endpoints
+│   └── database/schema.sql       # MySQL Schema & seed data
+├── .gitignore
 └── README.md
 ```
 
 ---
 
-## 🚀 How to Run the Project (চালানোর নিয়ম)
+## 🚀 How to Run
 
-### ধাপ ১: ফ্রন্টএন্ড চালানো (React Frontend)
+### Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) or [http://localhost:3001](http://localhost:3001).
 
-১. টার্মিনাল বা PowerShell খুলে `frontend` ফোল্ডারে যান:
-   ```bash
-   cd "C:\Users\Akramul Hasan\.gemini\antigravity\scratch\medicare-hub\frontend"
-   ```
-২. ডিপেন্ডেন্সি ইনস্টল করুন (যদি করা না থাকে):
-   ```bash
-   npm install
-   ```
-৩. ডেভেলপমেন্ট সার্ভার চালু করুন:
-   ```bash
-   npm run dev
-   ```
-৪. ব্রাউজারে `http://localhost:3000` (অথবা টার্মিনালে দেখানো পোর্টে) প্রবেশ করুন।
+### Backend (Optional with XAMPP):
+```bash
+# Place in C:\xampp\htdocs\medicare-hub
+# Import backend/database/schema.sql into MySQL via phpMyAdmin
+```
 
 ---
 
-### ধাপ ২: ব্যাকএন্ড ও ডাটাবেজ সেটআপ (PHP & MySQL via XAMPP)
+## 🔑 Demo Access IDs & Portals
 
-১. আপনার কম্পিউটারে **XAMPP** চালু করে **Apache** এবং **MySQL** স্টার্ট করুন।
-২. `medicare-hub` ফোল্ডারটি XAMPP এর `htdocs` ফোল্ডারে কপি করে রাখুন:
-   ```text
-   C:\xampp\htdocs\medicare-hub
-   ```
-৩. ব্রাউজারে `http://localhost/phpmyadmin` এ যান।
-৪. `medicare_db` নামে একটি নতুন ডাটাবেজ তৈরি করুন অথবা সরাসরি **Import** ট্যাবে গিয়ে নিচের ফাইলটি সিলেক্ট করে রান করুন:
-   ```text
-   backend/database/schema.sql
-   ```
-৫. এখন ব্যাকএন্ডের API স্বয়ংক্রিয়ভাবে `http://localhost/medicare-hub/backend/api/...` তে চালু হয়ে যাবে।
-
-> **💡 চমৎকার সুবিধা:** আপনি XAMPP ছাড়াও শুধুমাত্র React ফ্রন্টএন্ড রান করলেই সম্পূর্ণ ফাংশনালিটি (লগইন, অ্যাপয়েন্টমেন্ট বুকিং, অ্যাডমিন প্যানেল) টেস্ট করতে পারবেন! কারণ এতে স্বয়ংক্রিয়ভাবে অফলাইন সিঙ্ক ও লোকাল স্টোরেজ ব্যাকআপ যুক্ত করা আছে।
-
----
-
-## 🔑 Demo Login Accounts (টেস্ট একাউন্ট)
-
-| Role | Email | Password |
+| Portal / Role | ID Format | Example Login |
 |---|---|---|
-| **Admin Panel** | `admin@medicare.com` | `admin123` |
-| **Patient Portal** | `patient@medicare.com` | `patient123` |
+| **Patient Portal** | `PID` | `P05` (devid) / `P01` |
+| **Doctor Portal** | `DID` | `D101` / `D102` |
+| **Pathology Lab** | `LID` / `TID` | `L101` (Md. Rafiqul Islam) |
+| **Accounts / Billing** | `AID` | `A101` (Kamal Hossain) |
+| **Hospital Admin** | `Admin` | `admin@medicare.com` / `admin123` |
 
-*(লগইন পেজে **"1-Click Demo Login"** বাটনে ক্লিক করলেই এক ক্লিকে লগইন হয়ে যাবে)*
+---
+
+## 📄 License
+MIT © 2026 Akramul Hasan
