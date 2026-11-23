@@ -8,7 +8,9 @@ import {
   getGmailComposeUrl,
   getMailtoUrl,
   getWhatsAppShareUrl,
-  getMobileSmsUrl
+  getMobileSmsUrl,
+  getSmsGatewayConfig,
+  setSmsGatewayConfig
 } from '../services/notificationService';
 import { 
   HeartPulse, 
@@ -35,7 +37,9 @@ import {
   RefreshCw,
   X,
   Send,
-  ExternalLink
+  ExternalLink,
+  Settings,
+  Key
 } from 'lucide-react';
 
 const Register = ({ setActivePage }) => {
@@ -61,6 +65,16 @@ const Register = ({ setActivePage }) => {
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [notificationAlert, setNotificationAlert] = useState('');
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showSmsConfigModal, setShowSmsConfigModal] = useState(false);
+  const [smsGatewayConfig, setSmsGatewayConfigState] = useState(() => getSmsGatewayConfig());
+
+  const handleSaveSmsGateway = (e) => {
+    e.preventDefault();
+    setSmsGatewayConfig(smsGatewayConfig);
+    setShowSmsConfigModal(false);
+    setNotificationAlert('✓ SMS Gateway API Key সফলভাবে সেভ করা হয়েছে! এখন থেকে বাস্তব ফোনে অটোমেটিক SMS যাবে।');
+    setTimeout(() => setNotificationAlert(''), 5000);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -212,10 +226,25 @@ const Register = ({ setActivePage }) => {
                     <span className="text-[11px] text-slate-500 font-mono">নম্বর: {registeredUser.phone || '017XXXXXXXX'}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Delivered
-                  </span>
+                <div className="flex items-center gap-1.5">
+                  {smsGatewayConfig.apiKey ? (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> Auto Cellular Active
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 flex items-center gap-1">
+                      Queue Mode
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowSmsConfigModal(true)}
+                    className="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-700 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    title="SMS Gateway API Key Setup"
+                  >
+                    <Key className="w-3 h-3 text-amber-600" />
+                    <span className="hidden sm:inline">Gateway Key</span>
+                  </button>
                   <button
                     type="button"
                     onClick={handleResendSMS}
@@ -456,6 +485,86 @@ const Register = ({ setActivePage }) => {
                   Close Preview
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: SMS GATEWAY API KEY SETUP (FOR REAL AUTOMATED MOBILE SMS) */}
+        {showSmsConfigModal && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+              <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Key className="w-4 h-4 text-amber-400" />
+                  <h4 className="text-xs font-bold">Cellular SMS Gateway Setup (অটোমেটিক SMS)</h4>
+                </div>
+                <button
+                  onClick={() => setShowSmsConfigModal(false)}
+                  className="p-1.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-slate-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveSmsGateway} className="p-6 space-y-4 text-left text-xs">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 leading-relaxed">
+                  📢 <strong>টেলিকম গেটওয়ে তথ্য:</strong> আপনার দেওয়া ফোন নম্বরে (যেমন: <strong>{registeredUser.phone}</strong>) কোনো বাটন ক্লিক ছাড়া সরাসরি অটোমেটিক এসএমএস পাঠাতে একটি SMS গেটওয়ে API Key প্রয়োজন।
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Select Gateway Provider</label>
+                  <select
+                    value={smsGatewayConfig.provider || 'bulksmsbd'}
+                    onChange={(e) => setSmsGatewayConfigState({ ...smsGatewayConfig, provider: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="bulksmsbd">BulkSMSBD (www.bulksmsbd.com) - রিকমেন্ডেড</option>
+                    <option value="greenweb">Greenweb BD (api.greenweb.com.bd)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">API Key / Token *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. gDkX4... আপনার গেটওয়ে API Key"
+                    value={smsGatewayConfig.apiKey || ''}
+                    onChange={(e) => setSmsGatewayConfigState({ ...smsGatewayConfig, apiKey: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-cyan-500"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    BulkSMSBD বা Greenweb-এ সাইনআপ করে রিচার্জ করলে তারা সাথে সাথে একটি API Key দেয়।
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Sender ID (ঐচ্ছিক / Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 8809612443880 or MediCare"
+                    value={smsGatewayConfig.senderId || ''}
+                    onChange={(e) => setSmsGatewayConfigState({ ...smsGatewayConfig, senderId: e.target.value })}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowSmsConfigModal(false)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs shadow-md"
+                  >
+                    Save & Enable Auto SMS
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

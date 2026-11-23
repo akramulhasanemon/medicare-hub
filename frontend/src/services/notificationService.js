@@ -78,6 +78,18 @@ Dhanmondi, Dhaka, Bangladesh`;
   return { subject, bodyText };
 };
 
+export const getSmsGatewayConfig = () => {
+  try {
+    return JSON.parse(localStorage.getItem('medicare_sms_gateway_config') || '{}');
+  } catch (e) {
+    return {};
+  }
+};
+
+export const setSmsGatewayConfig = (config) => {
+  localStorage.setItem('medicare_sms_gateway_config', JSON.stringify(config));
+};
+
 /**
  * Send / Dispatch Registration SMS
  */
@@ -85,6 +97,32 @@ export const sendRegistrationSMS = async (user) => {
   const message = formatRegistrationSMS(user);
   const phone = user.phone || '01700000000';
   const timestamp = new Date().toISOString();
+  const gatewayConfig = getSmsGatewayConfig();
+
+  let cellularDispatched = false;
+  let gatewayName = gatewayConfig.provider ? gatewayConfig.provider.toUpperCase() : 'MediCare SMS Gateway';
+
+  // Attempt real automated backend cellular dispatch
+  try {
+    const res = await fetch('http://localhost/medicare-hub/backend/api/send_sms.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: phone,
+        message: message,
+        api_key: gatewayConfig.apiKey || '',
+        provider: gatewayConfig.provider || 'bulksmsbd',
+        sender_id: gatewayConfig.senderId || ''
+      })
+    });
+    const data = await res.json();
+    if (data && data.status === 'success') {
+      cellularDispatched = true;
+      gatewayName = `${data.provider.toUpperCase()} Cellular SIM Gateway`;
+    }
+  } catch (e) {
+    console.log('Local PHP SMS daemon offline, logging in hospital database:', e);
+  }
 
   const smsRecord = {
     id: `SMS-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -95,8 +133,9 @@ export const sendRegistrationSMS = async (user) => {
     role: user.role,
     title: 'Registration Confirmation SMS',
     message: message,
-    status: 'Delivered',
-    gateway: 'MediCare Teletalk/Grameenphone SMS Gateway',
+    status: cellularDispatched ? 'Delivered via Cellular SIM Gateway' : 'Queued (Ready for Gateway)',
+    gateway: gatewayName,
+    cellularDispatched: cellularDispatched,
     timestamp: timestamp,
     timeFormatted: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   };
@@ -107,7 +146,8 @@ export const sendRegistrationSMS = async (user) => {
   return {
     success: true,
     record: smsRecord,
-    deliveredAt: timestamp
+    deliveredAt: timestamp,
+    cellularDispatched
   };
 };
 
