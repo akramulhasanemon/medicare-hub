@@ -384,22 +384,6 @@ const AccountsPortal = ({ setActivePage }) => {
     setShowRefDocDropdown(false);
   };
 
-  const handleAddDoctorFeeToBill = () => {
-    if (!referredDoctor) return;
-    const fee = Number(referredDoctor.consultation_fee) || 1200;
-    const code = referredDoctor.doctor_code || `D${referredDoctor.id}`;
-    setInvoiceItems(prev => {
-      const isFirstEmpty = prev.length === 1 && (!prev[0].description || prev[0].description.trim() === '');
-      const docItem = {
-        description: `Doctor Specialist Consultation (${referredDoctor.name} - ${code})`,
-        amount: fee,
-        is_test: false
-      };
-      if (isFirstEmpty) return [docItem];
-      return [...prev, docItem];
-    });
-  };
-
   // Auto-sync POS when any Entity ID (PID, DID, LID, AID) is typed or selected
   const handleSelectPatientForPOS = (id) => {
     if (!id) return;
@@ -1220,17 +1204,13 @@ const AccountsPortal = ({ setActivePage }) => {
                     </div>
                   </div>
 
-                  {/* Active Selected Doctor Badge with 1-Click Fee Add */}
+                  {/* Active Selected Doctor Badge (Display Only - No Extra Fee Added) */}
                   {referredDoctor && (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleAddDoctorFeeToBill}
-                        className="bg-purple-700 hover:bg-purple-800 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>+ Add Dr. Fee (৳{referredDoctor.consultation_fee || 1200})</span>
-                      </button>
+                    <div className="flex items-center gap-1.5 bg-white border border-purple-200 px-3 py-1 rounded-xl shadow-2xs">
+                      <span className="text-[10px] text-slate-500 font-medium">Referred By:</span>
+                      <span className="text-xs font-bold text-purple-900 truncate max-w-[180px]">
+                        {referredDoctor.name}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -1264,7 +1244,7 @@ const AccountsPortal = ({ setActivePage }) => {
                     )}
                   </div>
 
-                  {/* Dropdown with filtered doctors */}
+                  {/* Dropdown with filtered doctors (Doctor Name & Specialty Only - No Fee) */}
                   {showRefDocDropdown && (
                     <>
                       <div 
@@ -1309,12 +1289,9 @@ const AccountsPortal = ({ setActivePage }) => {
                                     {doc.degrees && <span>• 🎓 {doc.degrees}</span>}
                                   </div>
                                 </div>
-                                <div className="text-right">
-                                  <span className="font-mono font-bold text-xs text-purple-900 block">
-                                    ৳ {doc.consultation_fee || 1200}
-                                  </span>
-                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all ${
-                                    isCurrent ? 'bg-purple-700 text-white' : 'text-purple-700 bg-purple-100 group-hover:bg-purple-700 group-hover:text-white'
+                                <div className="text-right shrink-0">
+                                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-lg transition-all ${
+                                    isCurrent ? 'bg-purple-700 text-white shadow-2xs' : 'text-purple-700 bg-purple-100 group-hover:bg-purple-700 group-hover:text-white'
                                   }`}>
                                     {isCurrent ? '✓ Selected' : 'Select'}
                                   </span>
@@ -1328,9 +1305,9 @@ const AccountsPortal = ({ setActivePage }) => {
                   )}
                 </div>
 
-                {/* Currently Selected Referred Doctor Card */}
+                {/* Currently Selected Referred Doctor Card (Name & Specialty Only) */}
                 {referredDoctor && (
-                  <div className="bg-white p-3 rounded-xl border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="bg-white p-3 rounded-xl border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs shrink-0">
                         👨‍⚕️
@@ -1349,9 +1326,6 @@ const AccountsPortal = ({ setActivePage }) => {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs font-mono font-bold text-purple-900 bg-purple-50 px-2 py-1 rounded-lg border border-purple-200">
-                        Fee: ৳{referredDoctor.consultation_fee || 1200}
-                      </span>
                       <button
                         type="button"
                         onClick={() => handleSelectReferredDoctor({
@@ -1359,10 +1333,9 @@ const AccountsPortal = ({ setActivePage }) => {
                           doctor_code: 'OPD',
                           name: 'Hospital General OPD / Self (সাধারণ বহির্বিভাগ)',
                           specialty: 'General Duty Consultation & Medical Officer',
-                          degrees: 'MediCare Hospital RMO / OPD',
-                          consultation_fee: 500
+                          degrees: 'MediCare Hospital RMO / OPD'
                         })}
-                        className="text-[10px] text-slate-500 hover:text-rose-600 underline px-1 py-0.5"
+                        className="text-[10px] font-bold text-slate-600 hover:text-rose-600 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 px-2.5 py-1 rounded-lg transition-all"
                       >
                         Reset to OPD
                       </button>
