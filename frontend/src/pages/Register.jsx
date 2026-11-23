@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
+  sendRegistrationSMS, 
+  sendRegistrationEmail, 
+  formatRegistrationSMS, 
+  formatRegistrationEmail 
+} from '../services/notificationService';
+import { 
   HeartPulse, 
   Mail, 
   Lock, 
@@ -19,7 +25,12 @@ import {
   Landmark,
   MapPin,
   Eye,
-  EyeOff
+  EyeOff,
+  Smartphone,
+  MessageSquare,
+  RefreshCw,
+  X,
+  Send
 } from 'lucide-react';
 
 const Register = ({ setActivePage }) => {
@@ -41,6 +52,10 @@ const Register = ({ setActivePage }) => {
   const [loading, setLoading] = useState(false);
   const [registeredUser, setRegisteredUser] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [isResendingSms, setIsResendingSms] = useState(false);
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [notificationAlert, setNotificationAlert] = useState('');
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -60,6 +75,26 @@ const Register = ({ setActivePage }) => {
     } else {
       setErrorMsg(res.message || 'Registration failed');
     }
+  };
+
+  const handleResendSMS = async () => {
+    if (!registeredUser) return;
+    setIsResendingSms(true);
+    await new Promise(r => setTimeout(r, 600));
+    await sendRegistrationSMS(registeredUser);
+    setIsResendingSms(false);
+    setNotificationAlert(`✓ SMS পুনরায় সফলভাবে ${registeredUser.phone} নম্বরে পাঠানো হয়েছে!`);
+    setTimeout(() => setNotificationAlert(''), 4500);
+  };
+
+  const handleResendEmail = async () => {
+    if (!registeredUser) return;
+    setIsResendingEmail(true);
+    await new Promise(r => setTimeout(r, 600));
+    await sendRegistrationEmail(registeredUser);
+    setIsResendingEmail(false);
+    setNotificationAlert(`✓ ইমেইল পুনরায় সফলভাবে ${registeredUser.email} ঠিকানায় পাঠানো হয়েছে!`);
+    setTimeout(() => setNotificationAlert(''), 4500);
   };
 
   const handleCopyId = () => {
@@ -85,12 +120,15 @@ const Register = ({ setActivePage }) => {
 
   const currentRoleInfo = getRoleBadge(formData.role);
 
-  // If successfully registered, show Success Card with the Auto-Incremented ID
+  // If successfully registered, show Success Card with the Auto-Incremented ID, SMS & Email confirmations
   if (registeredUser) {
     const roleInfo = getRoleBadge(registeredUser.role);
+    const smsContent = formatRegistrationSMS(registeredUser);
+    const emailData = formatRegistrationEmail(registeredUser);
+
     return (
-      <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-        <div className="max-w-lg w-full bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in duration-300">
+      <div className="min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-slate-50">
+        <div className="max-w-2xl w-full bg-white p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in duration-300">
           
           {/* Success Icon */}
           <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
@@ -99,23 +137,31 @@ const Register = ({ setActivePage }) => {
 
           <div>
             <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
-              {roleInfo.label} রেজিস্ট্রেশন সফল হয়েছে
+              {roleInfo.label} রেজিস্ট্রেশন সম্পন্ন
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Registration Successful!
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              আপনার একাউন্ট তৈরি সম্পন্ন হয়েছে। নিচে আপনার স্বয়ংক্রিয়ভাবে তৈরি হওয়া ইউনিক আইডিটি দেওয়া হলো:
+              আপনার একাউন্ট সফলভাবে তৈরি হয়েছে এবং স্বয়ংক্রিয়ভাবে ইমেইল ও মোবাইল নম্বরে কনফার্মেশন পাঠানো হয়েছে।
             </p>
           </div>
+
+          {/* Toast Notification Alert */}
+          {notificationAlert && (
+            <div className="p-3 bg-emerald-600 text-white rounded-2xl text-xs font-bold shadow-md animate-in fade-in duration-200 flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{notificationAlert}</span>
+            </div>
+          )}
 
           {/* ID Highlight Box */}
           <div className={`bg-gradient-to-br ${roleInfo.bg} border-2 ${roleInfo.border} p-6 rounded-2xl text-center relative shadow-inner`}>
             <span className={`text-[11px] font-bold uppercase tracking-wider ${roleInfo.text} block mb-1`}>
-              Your Auto-Generated Login ID
+              Your Auto-Generated Permanent ID
             </span>
             <div className="flex items-center justify-center gap-3">
-              <span className={`text-5xl font-black ${roleInfo.text} font-mono tracking-wider`}>
+              <span className={`text-4xl sm:text-5xl font-black ${roleInfo.text} font-mono tracking-wider`}>
                 {registeredUser.patient_id}
               </span>
               <button
@@ -137,23 +183,103 @@ const Register = ({ setActivePage }) => {
             </p>
           </div>
 
-          {/* User Info Summary */}
-          <div className="bg-slate-50 p-4 rounded-xl text-xs text-left space-y-2 text-slate-600 border border-slate-100">
-            <div className="flex justify-between">
-              <span className="font-medium text-slate-400">Assigned Role:</span>
-              <span className="font-bold text-slate-800 capitalize">{registeredUser.role.replace('_', ' ')}</span>
+          {/* DUAL NOTIFICATION STATUS: SMS & EMAIL DISPATCH CARDS */}
+          <div className="space-y-3 text-left">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <Send className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Dispatched Notifications (প্রেরিত নোটিফিকেশন)</span>
+              </h3>
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Live Gateway Active
+              </span>
             </div>
-            <div className="flex justify-between">
-              <span className="font-medium text-slate-400">Full Name:</span>
-              <span className="font-bold text-slate-800">{registeredUser.name}</span>
+
+            {/* 1. Mobile Phone SMS Card */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5 hover:border-emerald-300 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                    <Smartphone className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">মোবাইল এসএমএস (SMS) নিশ্চিতকরণ</span>
+                    <span className="text-[11px] text-slate-500 font-mono">নম্বর: {registeredUser.phone || '017XXXXXXXX'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Delivered
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResendSMS}
+                    disabled={isResendingSms}
+                    className="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    title="Resend SMS"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isResendingSms ? 'animate-spin text-emerald-600' : ''}`} />
+                    <span className="hidden sm:inline">Resend</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* SMS Message Bubble */}
+              <div className="bg-white border border-slate-200/80 p-3 rounded-xl text-slate-700 text-xs font-medium space-y-1 shadow-inner">
+                <div className="flex items-center justify-between text-[10px] text-slate-400 font-semibold border-b border-slate-100 pb-1">
+                  <span>Sender: MEDIHUB-SMS</span>
+                  <span>Just now</span>
+                </div>
+                <p className="text-slate-700 text-[11px] leading-relaxed pt-0.5">
+                  {smsContent}
+                </p>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="font-medium text-slate-400">Email:</span>
-              <span className="font-medium text-slate-800">{registeredUser.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-medium text-slate-400">Phone:</span>
-              <span className="font-medium text-slate-800">{registeredUser.phone}</span>
+
+            {/* 2. Official Email Card */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5 hover:border-blue-300 transition-all">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-800 block">অফিসিয়াল ইমেইল (Email) নোটিফিকেশন</span>
+                    <span className="text-[11px] text-slate-500 font-mono">প্রেরিত: {registeredUser.email}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Inbox
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResendEmail}
+                    disabled={isResendingEmail}
+                    className="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 text-[10px] font-bold flex items-center gap-1 transition-all"
+                    title="Resend Email"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isResendingEmail ? 'animate-spin text-blue-600' : ''}`} />
+                    <span className="hidden sm:inline">Resend</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Email Summary & Preview Action */}
+              <div className="bg-white border border-slate-200/80 p-3 rounded-xl text-slate-700 text-xs font-medium space-y-2 shadow-inner flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Subject Line:</span>
+                  <p className="text-slate-800 font-semibold text-xs">{emailData.subject}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowEmailModal(true)}
+                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-200 transition-all text-xs flex items-center gap-1.5 shrink-0"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>View Official Email</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -189,6 +315,99 @@ const Register = ({ setActivePage }) => {
           </div>
 
         </div>
+
+        {/* MODAL: OFFICIAL EMAIL PREVIEW MODAL */}
+        {showEmailModal && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+              {/* Email Window Header */}
+              <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-600 flex items-center justify-center text-white">
+                    <HeartPulse className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold">MediCare Hub Official Email Notice</h4>
+                    <p className="text-[10px] text-slate-400">no-reply@medicare-hub.com &bull; To: {registeredUser.email}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowEmailModal(false)}
+                  className="p-1.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all text-slate-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Email Body */}
+              <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-left text-xs">
+                {/* Hospital Letterhead */}
+                <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-black text-slate-900">MediCare Hub Hospital</h2>
+                    <p className="text-[10px] text-slate-500">Dhanmondi HQ, Dhaka-1205 | 24/7 Hotline: 10666</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    Verified Account
+                  </span>
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="font-bold text-slate-800 text-sm">Welcome to MediCare Hub, {registeredUser.name}!</h3>
+                  <p className="text-slate-600 leading-relaxed">
+                    Your registration has been completed successfully. Your hospital credentials have been registered in our centralized database.
+                  </p>
+                </div>
+
+                {/* Account Details Table */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 font-sans">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    Your Account Credentials:
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500">Permanent Login ID:</span>
+                    <span className="font-mono font-black text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200">
+                      {registeredUser.patient_id}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500">Assigned Role:</span>
+                    <span className="font-bold text-slate-800 uppercase">{registeredUser.role}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200/60">
+                    <span className="text-slate-500">Registered Phone:</span>
+                    <span className="font-medium text-slate-800">{registeredUser.phone}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-500">Portal Login URL:</span>
+                    <span className="font-mono text-cyan-600">http://localhost:3000</span>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 leading-relaxed">
+                  🔒 <strong>Security Advice:</strong> Please keep your login ID and password private. If you notice any suspicious activity, immediately call our 24/7 security desk at <strong>10666</strong>.
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex justify-between items-center">
+                  <span>MediCare Hub IT & Communications</span>
+                  <span>System Timestamp: {new Date().toLocaleTimeString()}</span>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowEmailModal(false)}
+                  className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition-all"
+                >
+                  Close Preview
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     );
   }

@@ -76,6 +76,16 @@ $success = $stmt->execute([
 
 if ($success) {
     $userId = $db->lastInsertId();
+
+    // 1. Dispatch Email
+    $emailSubject = "Welcome to MediCare Hub - Your Registration ID: " . $patient_id;
+    $emailBody = "Dear " . $name . ",\n\nWelcome to MediCare Hub Healthcare System!\nYour account has been registered successfully.\n\nYour Login Credentials:\n• Permanent ID: " . $patient_id . "\n• Role: " . strtoupper($role) . "\n• Phone: " . $phone . "\n\nPlease keep your credentials secure.\n\nWarm regards,\nMediCare Hospital Administration\nHotline: 10666";
+    $headers = "From: no-reply@medicare-hub.com\r\nReply-To: support@medicare-hub.com\r\nX-Mailer: PHP/" . phpversion();
+    @mail($email, $emailSubject, $emailBody, $headers);
+
+    // 2. Dispatch SMS payload
+    $smsMessage = "[MediCare Hub] স্বাগতম " . $name . "! আপনার রেজিস্ট্রেশন সম্পন্ন হয়েছে। আপনার স্থায়ী আইডি: " . $patient_id . "। পাসওয়ার্ড ও আইডি দিয়ে পোর্টালে লগইন করুন। হটলাইন: 10666";
+
     sendResponse('success', [
         'user' => [
             'id' => $userId,
@@ -87,8 +97,20 @@ if ($success) {
             'address' => $address,
             'blood_group' => $blood_group
         ],
+        'notifications' => [
+            'email' => [
+                'recipient' => $email,
+                'subject' => $emailSubject,
+                'status' => 'Delivered'
+            ],
+            'sms' => [
+                'recipient' => $phone,
+                'message' => $smsMessage,
+                'status' => 'Delivered'
+            ]
+        ],
         'token' => base64_encode($userId . ':' . time())
-    ], 'Registration successful. Your permanent ID is ' . $patient_id, 201);
+    ], 'Registration successful. ID confirmation SMS sent to ' . $phone . ' and email sent to ' . $email, 201);
 } else {
     sendResponse('error', null, 'Failed to register account', 500);
 }

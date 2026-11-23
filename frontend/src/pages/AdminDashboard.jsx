@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { dispatchRegistrationNotifications } from '../services/notificationService';
 import {
   Users,
   UserCheck,
@@ -218,6 +219,9 @@ const AdminDashboard = ({ setActivePage }) => {
     const registered = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
     registered.push(newPatient);
     localStorage.setItem('medicare_registered_users', JSON.stringify(registered));
+
+    // Dispatch SMS and Email for the newly created patient
+    dispatchRegistrationNotifications(newPatient);
 
     setIsAddPatientModalOpen(false);
     setPatientForm({

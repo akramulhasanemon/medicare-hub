@@ -14,6 +14,7 @@ import {
   initialInvoices
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
+import { dispatchRegistrationNotifications } from '../services/notificationService';
 
 const DataContext = createContext(null);
 
@@ -360,8 +361,7 @@ export const DataProvider = ({ children }) => {
     setDoctors(prev => [newDoctor, ...prev]);
 
     // Also register user so they can log in
-    const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
-    registeredUsers.push({
+    const doctorUser = {
       id: newDoctor.id,
       patient_id: nextCode,
       name: newDoctor.name,
@@ -370,8 +370,12 @@ export const DataProvider = ({ children }) => {
       address: newDoctor.address,
       role: 'doctor',
       password: doctorData.password || 'doctor123'
-    });
+    };
+    const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
+    registeredUsers.push(doctorUser);
     localStorage.setItem('medicare_registered_users', JSON.stringify(registeredUsers));
+
+    dispatchRegistrationNotifications(doctorUser);
 
     return { success: true, doctor: newDoctor };
   };
@@ -400,8 +404,7 @@ export const DataProvider = ({ children }) => {
     setLabEmployees(prev => [newEmployee, ...prev]);
 
     // Also register user account so they can log in with their ID and password
-    const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
-    registeredUsers.push({
+    const labUser = {
       id: newEmployee.id,
       patient_id: nextCode,
       name: newEmployee.name,
@@ -410,8 +413,12 @@ export const DataProvider = ({ children }) => {
       address: newEmployee.address,
       role: 'lab_staff',
       password: employeeData.password || 'lab123'
-    });
+    };
+    const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
+    registeredUsers.push(labUser);
     localStorage.setItem('medicare_registered_users', JSON.stringify(registeredUsers));
+
+    dispatchRegistrationNotifications(labUser);
 
     return { success: true, employee: newEmployee };
   };
@@ -440,8 +447,7 @@ export const DataProvider = ({ children }) => {
     setAccountsStaff(prev => [newStaff, ...prev]);
 
     // Also register user account so they can log in with their ID and password
-    const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
-    registeredUsers.push({
+    const accountsUser = {
       id: newStaff.id,
       patient_id: nextCode,
       name: newStaff.name,
@@ -450,8 +456,12 @@ export const DataProvider = ({ children }) => {
       address: newStaff.address,
       role: 'accountant',
       password: staffData.password || 'account123'
-    });
+    };
+    const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
+    registeredUsers.push(accountsUser);
     localStorage.setItem('medicare_registered_users', JSON.stringify(registeredUsers));
+
+    dispatchRegistrationNotifications(accountsUser);
 
     return { success: true, staff: newStaff };
   };

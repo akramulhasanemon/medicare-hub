@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { dispatchRegistrationNotifications } from '../services/notificationService';
 
 const AuthContext = createContext(null);
 
@@ -255,7 +256,8 @@ export const AuthProvider = ({ children }) => {
           setToken(data.data.token);
           localStorage.setItem('medicare_token', data.data.token);
         }
-        return { success: true, user: registeredUser, patient_id: registeredUser.patient_id };
+        const notif = await dispatchRegistrationNotifications(registeredUser);
+        return { success: true, user: registeredUser, patient_id: registeredUser.patient_id, notifications: notif };
       }
     } catch (e) {
       console.log('PHP backend offline, registering in local store');
@@ -335,7 +337,8 @@ export const AuthProvider = ({ children }) => {
 
     const { password: _, ...safeUser } = newUser;
     setUser(safeUser);
-    return { success: true, user: safeUser, patient_id: assignedId };
+    const notif = await dispatchRegistrationNotifications(newUser);
+    return { success: true, user: safeUser, patient_id: assignedId, notifications: notif };
   };
 
   // UPDATE PROFILE METHOD: Allows modifying phone, address, password, name
