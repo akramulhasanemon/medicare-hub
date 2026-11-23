@@ -118,13 +118,18 @@ const ProfileSettingsView = ({ theme = 'cyan' }) => {
       updatePayload.password = formData.new_password;
     }
 
+    const hasNewPassword = !!formData.new_password;
     const res = await updateUserProfile(updatePayload);
     setSaving(false);
 
     if (res.success) {
-      setSuccessMsg(`Profile information updated successfully! Your permanent ID (${permanentId}) remains securely locked.`);
+      if (hasNewPassword) {
+        setSuccessMsg(`প্রোফাইল ও নতুন পাসওয়ার্ড সফলভাবে আপডেট এবং সংরক্ষিত হয়েছে! পরবর্তী লগইনে আইডি (${permanentId}) এবং আপনার নতুন পাসওয়ার্ডটি ব্যবহার করুন।`);
+      } else {
+        setSuccessMsg(`প্রোফাইল তথ্য সফলভাবে সংরক্ষিত হয়েছে! আইডি (${permanentId}) অপরিবর্তনীয় ও সুরক্ষিত রয়েছে।`);
+      }
       setFormData(prev => ({ ...prev, new_password: '', confirm_password: '' }));
-      setTimeout(() => setSuccessMsg(''), 5000);
+      setTimeout(() => setSuccessMsg(''), 6000);
     } else {
       setErrorMsg(res.message || 'Failed to update profile. Please try again.');
     }

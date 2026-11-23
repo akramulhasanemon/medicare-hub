@@ -44,18 +44,106 @@ export const AuthProvider = ({ children }) => {
 
     // 2. Check registered users in localStorage FIRST (matches by ID, Full Name, Email, or Phone)
     const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
-    const found = registeredUsers.find(u => {
-      const matchId = u.patient_id && u.patient_id.toUpperCase() === upperIdent;
+    const existingUser = registeredUsers.find(u => {
+      const uId = String(u.patient_id || u.account_code || u.doctor_code || u.employee_code || u.id || '').toUpperCase();
+      const matchId = uId && (uId === upperIdent);
       const matchName = u.name && u.name.trim().toLowerCase() === normalizedIdent;
       const matchEmail = u.email && u.email.toLowerCase() === normalizedIdent;
-      const matchPhone = u.phone && u.phone === ident;
-      return (matchId || matchName || matchEmail || matchPhone) && u.password === pass;
+      const matchPhone = u.phone && String(u.phone).replace(/\D/g, '') === ident.replace(/\D/g, '');
+      return matchId || matchName || matchEmail || matchPhone;
     });
 
-    if (found) {
-      const { password: _, ...safeUser } = found;
-      setUser(safeUser);
-      return { success: true, user: safeUser };
+    if (existingUser) {
+      if (String(existingUser.password || '').trim() === pass) {
+        const { password: _, ...safeUser } = existingUser;
+        setUser(safeUser);
+        localStorage.setItem('medicare_user', JSON.stringify(safeUser));
+        return { success: true, user: safeUser };
+      } else {
+        return { 
+          success: false, 
+          message: 'Incorrect password! If you recently updated your password, please use your new password.' 
+        };
+      }
+    }
+
+    // 2b. Check accounts staff, lab staff, or doctors directory in case added by admin
+    const accountsStaff = JSON.parse(localStorage.getItem('medicare_accounts_staff') || '[]');
+    const accFound = accountsStaff.find(a => {
+      const c = String(a.account_code || a.id || '').toUpperCase();
+      return c === upperIdent || (a.email && a.email.toLowerCase() === normalizedIdent);
+    });
+    if (accFound) {
+      const accPass = String(accFound.password || 'account123').trim();
+      if (pass === accPass) {
+        const accUser = {
+          id: accFound.id,
+          patient_id: accFound.account_code || `A${accFound.id}`,
+          account_code: accFound.account_code || `A${accFound.id}`,
+          name: accFound.name,
+          email: accFound.email || `${(accFound.account_code || 'a101').toLowerCase()}@medicare.com`,
+          role: 'accountant',
+          phone: accFound.phone || '01733445566',
+          designation: accFound.designation || 'Accounts Officer'
+        };
+        setUser(accUser);
+        localStorage.setItem('medicare_user', JSON.stringify(accUser));
+        return { success: true, user: accUser };
+      } else {
+        return { success: false, message: 'Incorrect password for Accounts Staff ID ' + upperIdent };
+      }
+    }
+
+    const doctors = JSON.parse(localStorage.getItem('medicare_doctors') || '[]');
+    const docFound = doctors.find(d => {
+      const c = String(d.doctor_code || d.id || '').toUpperCase();
+      return c === upperIdent || (d.email && d.email.toLowerCase() === normalizedIdent);
+    });
+    if (docFound) {
+      const docPass = String(docFound.password || 'doctor123').trim();
+      if (pass === docPass) {
+        const docUser = {
+          id: docFound.id,
+          patient_id: docFound.doctor_code || `D${docFound.id}`,
+          doctor_code: docFound.doctor_code || `D${docFound.id}`,
+          name: docFound.name,
+          email: docFound.email || `${(docFound.doctor_code || 'd101').toLowerCase()}@medicare.com`,
+          role: 'doctor',
+          phone: docFound.phone || '01711000000',
+          specialty: docFound.specialty || 'Specialist Doctor'
+        };
+        setUser(docUser);
+        localStorage.setItem('medicare_user', JSON.stringify(docUser));
+        return { success: true, user: docUser };
+      } else {
+        return { success: false, message: 'Incorrect password for Doctor ID ' + upperIdent };
+      }
+    }
+
+    const labEmployees = JSON.parse(localStorage.getItem('medicare_lab_employees') || '[]');
+    const labFound = labEmployees.find(l => {
+      const c = String(l.employee_code || l.id || '').toUpperCase();
+      return c === upperIdent || (l.email && l.email.toLowerCase() === normalizedIdent);
+    });
+    if (labFound) {
+      const labPass = String(labFound.password || 'lab123').trim();
+      if (pass === labPass) {
+        const labUser = {
+          id: labFound.id,
+          patient_id: labFound.employee_code || `L${labFound.id}`,
+          employee_code: labFound.employee_code || `L${labFound.id}`,
+          name: labFound.name,
+          email: labFound.email || `${(labFound.employee_code || 'l101').toLowerCase()}@medicare.com`,
+          role: 'lab_staff',
+          phone: labFound.phone || '01711223344',
+          specialization: labFound.specialization || 'Clinical Technologist'
+        };
+        setUser(labUser);
+        localStorage.setItem('medicare_user', JSON.stringify(labUser));
+        return { success: true, user: labUser };
+      } else {
+        return { success: false, message: 'Incorrect password for Lab Staff ID ' + upperIdent };
+      }
     }
 
     // 3. Demo Fallback: Admin
@@ -70,6 +158,7 @@ export const AuthProvider = ({ children }) => {
         address: 'MediCare Hub Hospital HQ, Dhanmondi 27, Dhaka'
       };
       setUser(adminUser);
+      localStorage.setItem('medicare_user', JSON.stringify(adminUser));
       return { success: true, user: adminUser };
     }
 
@@ -87,6 +176,7 @@ export const AuthProvider = ({ children }) => {
         specialty: 'Cardiologist & Internal Medicine'
       };
       setUser(doctorUser);
+      localStorage.setItem('medicare_user', JSON.stringify(doctorUser));
       return { success: true, user: doctorUser };
     }
 
@@ -104,6 +194,7 @@ export const AuthProvider = ({ children }) => {
         specialization: 'Senior Pathologist & Lab Technologist'
       };
       setUser(labUser);
+      localStorage.setItem('medicare_user', JSON.stringify(labUser));
       return { success: true, user: labUser };
     }
 
@@ -121,6 +212,7 @@ export const AuthProvider = ({ children }) => {
         designation: 'Chief Accounts & Billing Officer'
       };
       setUser(accountsUser);
+      localStorage.setItem('medicare_user', JSON.stringify(accountsUser));
       return { success: true, user: accountsUser };
     }
 
@@ -137,6 +229,7 @@ export const AuthProvider = ({ children }) => {
         blood_group: 'B+'
       };
       setUser(patientUser);
+      localStorage.setItem('medicare_user', JSON.stringify(patientUser));
       return { success: true, user: patientUser };
     }
 
@@ -249,6 +342,8 @@ export const AuthProvider = ({ children }) => {
 
     // STRICT LOCK: ID and Role are NEVER allowed to be changed
     const { patient_id: _ignoredId, id: _ignoredPk, role: _ignoredRole, ...allowedUpdates } = updates;
+    const permanentId = String(user.patient_id || user.account_code || user.doctor_code || user.employee_code || user.id || '').toUpperCase();
+    const updatedPassword = allowedUpdates.password ? String(allowedUpdates.password).trim() : null;
 
     // Try PHP backend
     try {
@@ -256,11 +351,13 @@ export const AuthProvider = ({ children }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patient_id: user.patient_id,
+          patient_id: permanentId,
+          email: user.email || '',
+          id: user.id || '',
           name: allowedUpdates.name || user.name,
           phone: allowedUpdates.phone || user.phone,
           address: allowedUpdates.address || user.address,
-          password: allowedUpdates.password
+          password: updatedPassword
         })
       });
     } catch (e) {
@@ -270,7 +367,7 @@ export const AuthProvider = ({ children }) => {
     const updatedUser = {
       ...user,
       ...allowedUpdates,
-      patient_id: user.patient_id, // LOCKED PERMANENT ID
+      patient_id: permanentId, // LOCKED PERMANENT ID
       id: user.id,
       role: user.role
     };
@@ -280,57 +377,74 @@ export const AuthProvider = ({ children }) => {
 
     // Update in registeredUsers
     const registeredUsers = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
-    const userIndex = registeredUsers.findIndex(u => 
-      (u.patient_id && u.patient_id === user.patient_id) || 
-      (u.email && u.email.toLowerCase() === user.email.toLowerCase())
-    );
+    const userIndex = registeredUsers.findIndex(u => {
+      const uCode = String(u.patient_id || u.account_code || u.doctor_code || u.employee_code || u.id || '').toUpperCase();
+      const uEmail = String(u.email || '').toLowerCase();
+      return (permanentId && uCode === permanentId) || (user.email && uEmail === String(user.email).toLowerCase());
+    });
 
     if (userIndex !== -1) {
       registeredUsers[userIndex] = {
         ...registeredUsers[userIndex],
         ...allowedUpdates,
-        patient_id: user.patient_id, // ALWAYS PERMANENT
-        id: registeredUsers[userIndex].id,
-        role: registeredUsers[userIndex].role
+        patient_id: permanentId,
+        account_code: user.account_code || (user.role === 'accountant' ? permanentId : undefined),
+        doctor_code: user.doctor_code || (user.role === 'doctor' ? permanentId : undefined),
+        employee_code: user.employee_code || (user.role === 'lab_staff' ? permanentId : undefined),
+        id: registeredUsers[userIndex].id || user.id,
+        role: registeredUsers[userIndex].role || user.role,
+        ...(updatedPassword ? { password: updatedPassword } : {})
       };
-      if (allowedUpdates.password) {
-        registeredUsers[userIndex].password = allowedUpdates.password;
-      }
-      localStorage.setItem('medicare_registered_users', JSON.stringify(registeredUsers));
     } else {
       registeredUsers.push({
         ...updatedUser,
-        password: allowedUpdates.password || (user.role === 'doctor' ? 'doctor123' : user.role === 'lab_staff' ? 'lab123' : user.role === 'accountant' ? 'account123' : 'patient123')
+        patient_id: permanentId,
+        account_code: user.account_code || (user.role === 'accountant' ? permanentId : undefined),
+        doctor_code: user.doctor_code || (user.role === 'doctor' ? permanentId : undefined),
+        employee_code: user.employee_code || (user.role === 'lab_staff' ? permanentId : undefined),
+        password: updatedPassword || (user.role === 'doctor' ? 'doctor123' : user.role === 'lab_staff' ? 'lab123' : user.role === 'accountant' ? 'account123' : 'patient123')
       });
-      localStorage.setItem('medicare_registered_users', JSON.stringify(registeredUsers));
     }
+    localStorage.setItem('medicare_registered_users', JSON.stringify(registeredUsers));
 
     // Sync in respective sub-tables
     if (user.role === 'doctor') {
       const doctors = JSON.parse(localStorage.getItem('medicare_doctors') || '[]');
-      const docIdx = doctors.findIndex(d => d.doctor_code === user.patient_id || d.name === user.name);
+      const docIdx = doctors.findIndex(d => {
+        const c = String(d.doctor_code || d.id || '').toUpperCase();
+        return c === permanentId || d.name === user.name;
+      });
       if (docIdx !== -1) {
         doctors[docIdx].phone = allowedUpdates.phone || doctors[docIdx].phone;
         doctors[docIdx].address = allowedUpdates.address || doctors[docIdx].address;
         doctors[docIdx].name = allowedUpdates.name || doctors[docIdx].name;
+        if (updatedPassword) doctors[docIdx].password = updatedPassword;
         localStorage.setItem('medicare_doctors', JSON.stringify(doctors));
       }
     } else if (user.role === 'lab_staff') {
       const labEmployees = JSON.parse(localStorage.getItem('medicare_lab_employees') || '[]');
-      const labIdx = labEmployees.findIndex(l => l.employee_code === user.patient_id || l.name === user.name);
+      const labIdx = labEmployees.findIndex(l => {
+        const c = String(l.employee_code || l.id || '').toUpperCase();
+        return c === permanentId || l.name === user.name;
+      });
       if (labIdx !== -1) {
         labEmployees[labIdx].phone = allowedUpdates.phone || labEmployees[labIdx].phone;
         labEmployees[labIdx].address = allowedUpdates.address || labEmployees[labIdx].address;
         labEmployees[labIdx].name = allowedUpdates.name || labEmployees[labIdx].name;
+        if (updatedPassword) labEmployees[labIdx].password = updatedPassword;
         localStorage.setItem('medicare_lab_employees', JSON.stringify(labEmployees));
       }
     } else if (user.role === 'accountant') {
       const accounts = JSON.parse(localStorage.getItem('medicare_accounts_staff') || '[]');
-      const accIdx = accounts.findIndex(a => a.account_code === user.patient_id || a.name === user.name);
+      const accIdx = accounts.findIndex(a => {
+        const c = String(a.account_code || a.id || '').toUpperCase();
+        return c === permanentId || a.name === user.name;
+      });
       if (accIdx !== -1) {
         accounts[accIdx].phone = allowedUpdates.phone || accounts[accIdx].phone;
         accounts[accIdx].address = allowedUpdates.address || accounts[accIdx].address;
         accounts[accIdx].name = allowedUpdates.name || accounts[accIdx].name;
+        if (updatedPassword) accounts[accIdx].password = updatedPassword;
         localStorage.setItem('medicare_accounts_staff', JSON.stringify(accounts));
       }
     }
@@ -338,7 +452,7 @@ export const AuthProvider = ({ children }) => {
     return { 
       success: true, 
       user: updatedUser, 
-      message: `Profile updated successfully! Permanent ID ${user.patient_id} is permanently locked.` 
+      message: `Profile updated successfully! Permanent ID ${permanentId} is permanently locked.` 
     };
   };
 

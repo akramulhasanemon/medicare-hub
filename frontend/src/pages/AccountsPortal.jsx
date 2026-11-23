@@ -163,33 +163,132 @@ const AccountsPortal = ({ setActivePage }) => {
 
   const allPatientsList = getAllPatientList();
 
-  // Helper to fetch complete patient info across directory
-  const getPatientMasterInfo = (searchId) => {
+  // Comprehensive Master Entity Directory: Searches across Patients (PID), Doctors (DID), Lab Staff (LID), and Accounts Staff (AID)
+  const getUniversalEntityMasterInfo = (searchId) => {
     if (!searchId) return null;
-    const query = searchId.trim().toUpperCase();
-    const list = getAllPatientList();
-    
-    // 1. Exact ID match
-    let found = list.find(u => u.patient_id && u.patient_id.toUpperCase() === query);
-    
-    // 2. Partial ID match
-    if (!found) {
-      found = list.find(u => u.patient_id && u.patient_id.toUpperCase().includes(query));
+    const query = String(searchId).trim().toUpperCase();
+
+    // 1. Check Patients (PID)
+    const patList = getAllPatientList();
+    const pat = patList.find(p => 
+      (p.patient_id && p.patient_id.toUpperCase() === query) ||
+      (p.name && p.name.toUpperCase() === query) ||
+      (p.phone && p.phone === query)
+    );
+    if (pat) {
+      return {
+        ...pat,
+        entityType: 'PID',
+        badge: 'PID',
+        badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        roleLabel: 'Registered Patient (সাধারণ রোগী)',
+        id: pat.patient_id,
+        name: pat.name,
+        phone: pat.phone || '',
+        address: pat.address || 'Dhaka, Bangladesh',
+        detailPrimary: `Blood Group: ${pat.blood_group || 'O+'}`,
+        detailSecondary: `Gender: ${pat.gender || 'N/A'}`
+      };
     }
 
-    // 3. Name or Phone match
-    if (!found) {
-      found = list.find(u => 
-        (u.name && u.name.toUpperCase().includes(query)) ||
-        (u.phone && u.phone.includes(query))
-      );
+    // 2. Check Doctors (DID)
+    const docList = doctors || [];
+    const doc = docList.find(d => {
+      const code = (d.doctor_code || `D${d.id}`).toUpperCase();
+      return code === query || (d.name && d.name.toUpperCase() === query) || (d.phone && d.phone === query);
+    });
+    if (doc) {
+      const code = doc.doctor_code || `D${doc.id}`;
+      return {
+        ...doc,
+        entityType: 'DID',
+        badge: 'DID',
+        badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+        roleLabel: 'Specialist Doctor (বিশেষজ্ঞ চিকিৎসক)',
+        id: code,
+        name: doc.name,
+        phone: doc.phone || '01711000000',
+        address: doc.address || 'MediCare Hospital Chambers, Dhaka',
+        detailPrimary: `Specialty: ${doc.specialty || 'Consultant'}`,
+        detailSecondary: `Fee: ৳${doc.consultation_fee || 1200}`
+      };
     }
 
-    return found || null;
+    // 3. Check Lab Staff / Technologists (LID)
+    const labList = (labEmployees && labEmployees.length > 0 ? labEmployees : [
+      { employee_code: 'L101', name: 'Md. Rafiqul Islam', specialization: 'Senior Pathologist & Lab Technologist', phone: '01711223344', department: 'Pathology & Diagnostic Lab', address: 'Plot 18, Block D, Mirpur-10, Dhaka' }
+    ]);
+    const lab = labList.find(l => {
+      const code = (l.employee_code || `L${l.id}`).toUpperCase();
+      return code === query || (l.name && l.name.toUpperCase() === query) || (l.phone && l.phone === query);
+    });
+    if (lab) {
+      const code = lab.employee_code || `L${lab.id}`;
+      return {
+        ...lab,
+        entityType: 'LID',
+        badge: 'LID',
+        badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+        roleLabel: 'Pathology Lab Staff (ক্লিনিক্যাল ল্যাব কর্মী)',
+        id: code,
+        name: lab.name,
+        phone: lab.phone || '01711223344',
+        address: lab.address || 'MediCare Hospital, Dhaka',
+        detailPrimary: `Specialization: ${lab.specialization || 'Lab Technologist'}`,
+        detailSecondary: `Dept: ${lab.department || 'Diagnostic Lab'}`
+      };
+    }
+
+    // 4. Check Accounts Staff (AID)
+    const accList = (accountsStaff && accountsStaff.length > 0 ? accountsStaff : [
+      { account_code: 'A101', name: 'Kamal Hossain', designation: 'Chief Accounts & Billing Officer', phone: '01733445566', address: 'Sector 7, Road 14, Uttara, Dhaka' },
+      { account_code: 'A102', name: 'Nusrat Jahan', designation: 'Billing Executive', phone: '01899223344', address: 'Mirpur, Dhaka' },
+      { account_code: 'A103', name: 'Akramul Hasan', designation: 'Accounts Specialist', phone: '01568812468', address: 'Dhaka, Bangladesh' }
+    ]);
+    const acc = accList.find(a => {
+      const code = (a.account_code || `A${a.id}`).toUpperCase();
+      return code === query || (a.name && a.name.toUpperCase() === query) || (a.phone && a.phone === query);
+    });
+    if (acc) {
+      const code = acc.account_code || `A${acc.id}`;
+      return {
+        ...acc,
+        entityType: 'AID',
+        badge: 'AID',
+        badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+        roleLabel: 'Accounts & Billing Staff (হিসাব কর্মকর্তা)',
+        id: code,
+        name: acc.name,
+        phone: acc.phone || '01733445566',
+        address: acc.address || 'MediCare Hospital, Dhaka',
+        detailPrimary: `Designation: ${acc.designation || 'Accounts Officer'}`,
+        detailSecondary: `Section: ${acc.section || 'General Billing & Counter'}`
+      };
+    }
+
+    // 5. Partial match across all entities
+    const all = [
+      ...patList.map(p => ({ ...p, entityType: 'PID', id: p.patient_id })),
+      ...docList.map(d => ({ ...d, entityType: 'DID', id: d.doctor_code || `D${d.id}` })),
+      ...labList.map(l => ({ ...l, entityType: 'LID', id: l.employee_code || `L${l.id}` })),
+      ...accList.map(a => ({ ...a, entityType: 'AID', id: a.account_code || `A${a.id}` }))
+    ];
+    const partial = all.find(item => 
+      (item.id && item.id.toUpperCase().includes(query)) ||
+      (item.name && item.name.toUpperCase().includes(query))
+    );
+    if (partial && partial.id) {
+      return getUniversalEntityMasterInfo(partial.id);
+    }
+
+    return null;
   };
 
-  // Universal Multi-Entity ID Search State: Pid (Patient), did (Doctor), tid (Test), aid (Accounts Staff)
-  const [idFilterCategory, setIdFilterCategory] = useState('ALL'); // 'ALL' | 'PID' | 'DID' | 'TID' | 'AID'
+  // Backward compatible wrapper
+  const getPatientMasterInfo = (searchId) => getUniversalEntityMasterInfo(searchId);
+
+  // Universal Multi-Entity ID Search State: PID (Patient), DID (Doctor), LID (Lab), AID (Accounts Staff), TID (Test)
+  const [idFilterCategory, setIdFilterCategory] = useState('ALL'); // 'ALL' | 'PID' | 'DID' | 'LID' | 'AID' | 'TID'
 
   const currentStatementPatient = getPatientMasterInfo(patientLookupId);
   const patientInvoices = invoices.filter(inv => 
@@ -206,13 +305,14 @@ const AccountsPortal = ({ setActivePage }) => {
   const [testSearchQuery, setTestSearchQuery] = useState('');
   const [showTestDropdown, setShowTestDropdown] = useState(false);
 
-  // Auto-sync POS when patientId is typed or selected
+  // Auto-sync POS when any Entity ID (PID, DID, LID, AID) is typed or selected
   const handleSelectPatientForPOS = (id) => {
+    if (!id) return;
     setPatientId(id);
-    const pat = getPatientMasterInfo(id);
-    if (pat) {
-      setPatientName(pat.name);
-      setPatientPhone(pat.phone);
+    const entity = getUniversalEntityMasterInfo(id);
+    if (entity) {
+      setPatientName(entity.name);
+      if (entity.phone) setPatientPhone(entity.phone);
     }
   };
 
@@ -232,7 +332,7 @@ const AccountsPortal = ({ setActivePage }) => {
     setShowTestDropdown(false);
   };
 
-  // Comprehensive Multi-Entity Directory Lookup (PID, DID, TID, AID)
+  // Comprehensive Multi-Entity Directory Lookup (PID, DID, LID, AID, TID)
   const getUniversalDirectoryItems = () => {
     const q = posSearchQuery.trim().toUpperCase();
 
@@ -268,18 +368,72 @@ const AccountsPortal = ({ setActivePage }) => {
         id: d.doctor_code || `D${d.id}`,
         title: d.name,
         subtitle: `${d.specialty || 'Specialist Consultant'} • Fee: ৳${d.consultation_fee || 1200}`,
-        actionLabel: '+ Add Consultation',
+        actionLabel: 'Select Doctor',
         onSelect: () => {
+          const docCode = d.doctor_code || `D${d.id}`;
+          handleSelectPatientForPOS(docCode);
           setInvoiceItems(prev => [
             ...prev,
-            { description: `Specialist Doctor Consultation (${d.name} - ${d.doctor_code || 'D101'})`, amount: Number(d.consultation_fee) || 1200, is_test: false }
+            { description: `Specialist Doctor Consultation (${d.name} - ${docCode})`, amount: Number(d.consultation_fee) || 1200, is_test: false }
           ]);
           setPosSearchQuery('');
           setShowPosDropdown(false);
         }
       }));
 
-    // 3. TID - Test Tokens & Investigations
+    // 3. LID - Lab Employees / Technologists
+    const labStaffList = (labEmployees && labEmployees.length > 0 ? labEmployees : [
+      { employee_code: 'L101', name: 'Md. Rafiqul Islam', specialization: 'Senior Pathologist & Lab Technologist', phone: '01711223344', department: 'Pathology & Diagnostic Lab' }
+    ])
+      .filter(l => {
+        if (!q) return true;
+        const code = (l.employee_code || l.id || '').toUpperCase();
+        return code.includes(q) || (l.name && l.name.toUpperCase().includes(q)) || (l.specialization && l.specialization.toUpperCase().includes(q));
+      })
+      .map(l => ({
+        entityType: 'LID',
+        badge: 'LID',
+        badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+        id: l.employee_code || l.id || 'L101',
+        title: l.name,
+        subtitle: `${l.specialization || 'Clinical Technologist'} • 📞 ${l.phone || '01711223344'}`,
+        actionLabel: 'Select Lab Staff',
+        onSelect: () => {
+          const labCode = l.employee_code || l.id || 'L101';
+          handleSelectPatientForPOS(labCode);
+          setPosSearchQuery('');
+          setShowPosDropdown(false);
+        }
+      }));
+
+    // 4. AID - Accounts Staff
+    const accountsList = (accountsStaff && accountsStaff.length > 0 ? accountsStaff : [
+      { account_code: 'A101', name: 'Kamal Hossain', designation: 'Chief Accounts Officer', phone: '01733445566' },
+      { account_code: 'A102', name: 'Nusrat Jahan', designation: 'Billing Executive', phone: '01899223344' },
+      { account_code: 'A103', name: 'Akramul Hasan', designation: 'Accounts Specialist', phone: '01568812468' }
+    ])
+      .filter(a => {
+        if (!q) return true;
+        const code = (a.account_code || a.id || '').toUpperCase();
+        return code.includes(q) || (a.name && a.name.toUpperCase().includes(q)) || (a.designation && a.designation.toUpperCase().includes(q));
+      })
+      .map(a => ({
+        entityType: 'AID',
+        badge: 'AID',
+        badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+        id: a.account_code || a.id || 'A101',
+        title: a.name,
+        subtitle: `${a.designation || 'Accounts Officer'} • 📞 ${a.phone || a.contact || '01733445566'}`,
+        actionLabel: 'Select Accounts',
+        onSelect: () => {
+          const accCode = a.account_code || a.id || 'A101';
+          handleSelectPatientForPOS(accCode);
+          setPosSearchQuery('');
+          setShowPosDropdown(false);
+        }
+      }));
+
+    // 5. TID - Test Tokens & Investigations
     const bookedTokens = (labBookings || [])
       .filter(b => {
         if (!q) return false;
@@ -330,41 +484,19 @@ const AccountsPortal = ({ setActivePage }) => {
         }
       }));
 
-    // 4. AID - Accounts Staff
-    const accountsList = (accountsStaff && accountsStaff.length > 0 ? accountsStaff : [
-      { account_code: 'A101', name: 'Kamal Hossain', designation: 'Chief Accounts Officer', phone: '01733445566' },
-      { account_code: 'A102', name: 'Nusrat Jahan', designation: 'Billing Executive', phone: '01899223344' }
-    ])
-      .filter(a => {
-        if (!q) return true;
-        const code = (a.account_code || a.id || '').toUpperCase();
-        return code.includes(q) || (a.name && a.name.toUpperCase().includes(q)) || (a.designation && a.designation.toUpperCase().includes(q));
-      })
-      .map(a => ({
-        entityType: 'AID',
-        badge: 'AID',
-        badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
-        id: a.account_code || a.id || 'A101',
-        title: a.name,
-        subtitle: `${a.designation || 'Accounts Officer'} • 📞 ${a.phone || a.contact || '01733445566'}`,
-        actionLabel: 'Staff Record',
-        onSelect: () => {
-          setPosSearchQuery('');
-          setShowPosDropdown(false);
-        }
-      }));
-
     let allItems = [];
     if (idFilterCategory === 'ALL') {
-      allItems = [...patients, ...doctorsList, ...bookedTokens, ...masterInvestigations, ...accountsList];
+      allItems = [...patients, ...doctorsList, ...labStaffList, ...accountsList, ...bookedTokens, ...masterInvestigations];
     } else if (idFilterCategory === 'PID') {
       allItems = patients;
     } else if (idFilterCategory === 'DID') {
       allItems = doctorsList;
-    } else if (idFilterCategory === 'TID') {
-      allItems = [...bookedTokens, ...masterInvestigations];
+    } else if (idFilterCategory === 'LID') {
+      allItems = labStaffList;
     } else if (idFilterCategory === 'AID') {
       allItems = accountsList;
+    } else if (idFilterCategory === 'TID') {
+      allItems = [...bookedTokens, ...masterInvestigations];
     }
 
     return allItems;
@@ -745,8 +877,9 @@ const AccountsPortal = ({ setActivePage }) => {
                                 { key: 'ALL', label: 'All IDs' },
                                 { key: 'PID', label: 'PID (Patient)' },
                                 { key: 'DID', label: 'DID (Doctor)' },
-                                { key: 'TID', label: 'TID (Test)' },
-                                { key: 'AID', label: 'AID (Accounts)' }
+                                { key: 'LID', label: 'LID (Lab)' },
+                                { key: 'AID', label: 'AID (Accounts)' },
+                                { key: 'TID', label: 'TID (Test)' }
                               ].map(cat => (
                                 <button
                                   key={cat.key}
@@ -807,36 +940,55 @@ const AccountsPortal = ({ setActivePage }) => {
                       )}
                     </div>
 
-                    {/* Quick One-Click Patient Badges */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto max-w-xs">
-                      {allPatientsList.slice(0, 3).map(pat => (
-                        <button
-                          key={pat.patient_id}
-                          type="button"
-                          onClick={() => handleSelectPatientForPOS(pat.patient_id)}
-                          className={`px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] transition-all border shrink-0 ${
-                            patientId.toUpperCase() === pat.patient_id.toUpperCase()
-                              ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
-                              : 'bg-white border-slate-200 hover:border-emerald-500 text-slate-700 hover:text-emerald-800'
-                          }`}
-                        >
-                          {pat.patient_id} ({pat.name.split(' ')[0]})
-                        </button>
-                      ))}
+                    {/* Quick Multi-Entity One-Click Badges (Patient, Doctor, Lab, Accounts) */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto max-w-sm sm:max-w-md no-scrollbar">
+                      {[
+                        { id: 'P01', label: 'P01 (John)' },
+                        { id: 'P02', label: 'P02 (Akramul)' },
+                        { id: 'D101', label: 'D101 (Dr. Rahman)' },
+                        { id: 'L101', label: 'L101 (Rafiqul - Lab)' },
+                        { id: 'A101', label: 'A101 (Kamal)' },
+                        { id: 'A103', label: 'A103 (Akramul - Acc)' }
+                      ].map(chip => {
+                        const isSelected = patientId && patientId.toUpperCase() === chip.id.toUpperCase();
+                        return (
+                          <button
+                            key={chip.id}
+                            type="button"
+                            onClick={() => handleSelectPatientForPOS(chip.id)}
+                            className={`px-2.5 py-1 rounded-lg font-mono font-bold text-[10px] transition-all border shrink-0 ${
+                              isSelected
+                                ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
+                                : 'bg-white border-slate-200 hover:border-emerald-500 text-slate-700 hover:text-emerald-800'
+                            }`}
+                          >
+                            {chip.label}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Patient ID (রোগীর আইডি) *</label>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      {(() => {
+                        const ent = getUniversalEntityMasterInfo(patientId);
+                        if (!ent) return 'ID (PID, DID, LID, AID) *';
+                        if (ent.entityType === 'DID') return 'Doctor ID (চিকিৎসকের আইডি) *';
+                        if (ent.entityType === 'LID') return 'Lab Staff ID (ল্যাব কর্মীর আইডি) *';
+                        if (ent.entityType === 'AID') return 'Accounts Staff ID (হিসাব কর্মকর্তার আইডি) *';
+                        return 'Patient ID (রোগীর আইডি) *';
+                      })()}
+                    </label>
                     <input
                       type="text"
                       list="pos-patient-datalist"
                       required
                       value={patientId}
                       onChange={(e) => handleSelectPatientForPOS(e.target.value)}
-                      placeholder="e.g. P01, P02..."
+                      placeholder="e.g. P01, D101, L101, A101..."
                       className="w-full border border-slate-200 rounded-xl px-3 py-2 bg-white font-mono font-bold text-xs focus:ring-2 focus:ring-emerald-500 uppercase"
                     />
                     <datalist id="pos-patient-datalist">
@@ -850,22 +1002,39 @@ const AccountsPortal = ({ setActivePage }) => {
                           [DID] {doc.doctor_code || `D${doc.id}`} - {doc.name} ({doc.specialty})
                         </option>
                       ))}
-                      {(hospitalStandardTests || []).map(t => (
-                        <option key={`tid-${t.id}`} value={t.tid || t.code}>
-                          [TID] {t.tid} ({t.code}) - {t.name} (৳{t.price})
+                      {(labEmployees && labEmployees.length > 0 ? labEmployees : [
+                        { employee_code: 'L101', name: 'Md. Rafiqul Islam', specialization: 'Senior Pathologist' }
+                      ]).map(lab => (
+                        <option key={`lid-${lab.employee_code || lab.id}`} value={lab.employee_code || lab.id}>
+                          [LID] {lab.employee_code || lab.id} - {lab.name} ({lab.specialization || 'Lab Technologist'})
                         </option>
                       ))}
                       {(accountsStaff && accountsStaff.length > 0 ? accountsStaff : [
-                        { account_code: 'A101', name: 'Kamal Hossain', designation: 'Chief Accounts Officer' }
+                        { account_code: 'A101', name: 'Kamal Hossain', designation: 'Chief Accounts Officer' },
+                        { account_code: 'A103', name: 'Akramul Hasan', designation: 'Accounts Specialist' }
                       ]).map(a => (
                         <option key={`aid-${a.account_code || a.id}`} value={a.account_code || a.id}>
                           [AID] {a.account_code || a.id} - {a.name} ({a.designation})
                         </option>
                       ))}
+                      {(hospitalStandardTests || []).map(t => (
+                        <option key={`tid-${t.id}`} value={t.tid || t.code}>
+                          [TID] {t.tid} ({t.code}) - {t.name} (৳{t.price})
+                        </option>
+                      ))}
                     </datalist>
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">Patient Full Name *</label>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      {(() => {
+                        const ent = getUniversalEntityMasterInfo(patientId);
+                        if (!ent) return 'Full Name (নাম) *';
+                        if (ent.entityType === 'DID') return 'Doctor Full Name (চিকিৎসকের নাম) *';
+                        if (ent.entityType === 'LID') return 'Lab Staff Full Name (ল্যাব কর্মীর নাম) *';
+                        if (ent.entityType === 'AID') return 'Staff Full Name (কর্মকর্তার নাম) *';
+                        return 'Patient Full Name (রোগীর নাম) *';
+                      })()}
+                    </label>
                     <input
                       type="text"
                       required
@@ -885,28 +1054,111 @@ const AccountsPortal = ({ setActivePage }) => {
                   </div>
                 </div>
 
-                {/* Auto-detected Patient Information Pill */}
-                {getPatientMasterInfo(patientId) && (
-                  <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div className="flex flex-wrap items-center gap-3 text-slate-700">
-                      <span className="flex items-center gap-1 font-medium">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-700" /> {getPatientMasterInfo(patientId).address || 'Dhaka, Bangladesh'}
-                      </span>
-                      <span className="flex items-center gap-1 font-medium">
-                        <Droplet className="w-3.5 h-3.5 text-rose-500" /> Blood Group: {getPatientMasterInfo(patientId).blood_group || 'B+'}
-                      </span>
-                    </div>
+                {/* Auto-detected Universal Entity Information & Details Card */}
+                {getUniversalEntityMasterInfo(patientId) && (() => {
+                  const entity = getUniversalEntityMasterInfo(patientId);
+                  return (
+                    <div className={`p-3.5 rounded-2xl border shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                      entity.entityType === 'DID'
+                        ? 'bg-purple-50/80 border-purple-200'
+                        : entity.entityType === 'LID'
+                        ? 'bg-blue-50/80 border-blue-200'
+                        : entity.entityType === 'AID'
+                        ? 'bg-amber-50/80 border-amber-200'
+                        : 'bg-emerald-50/80 border-emerald-200'
+                    }`}>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-[10px] border ${entity.badgeColor}`}>
+                            {entity.badge}
+                          </span>
+                          <span className="font-extrabold text-slate-900 text-sm">
+                            {entity.name}
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            ({entity.roleLabel})
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 text-slate-600 text-[11px]">
+                          <span className="flex items-center gap-1 font-medium">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" /> {entity.phone || 'N/A'}
+                          </span>
+                          <span className="flex items-center gap-1 font-medium">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400" /> {entity.address || 'Dhaka, Bangladesh'}
+                          </span>
+                          {entity.detailPrimary && (
+                            <span className="font-bold text-slate-700 bg-white/80 px-2 py-0.5 rounded border border-slate-200/80">
+                              {entity.detailPrimary}
+                            </span>
+                          )}
+                          {entity.detailSecondary && (
+                            <span className="font-bold text-slate-700 bg-white/80 px-2 py-0.5 rounded border border-slate-200/80">
+                              {entity.detailSecondary}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                    <button
-                      type="button"
-                      onClick={handleAutoLoadPrescribedServices}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] shadow-sm transition-all flex items-center gap-1.5"
-                    >
-                      <Stethoscope className="w-3.5 h-3.5" />
-                      <span>Auto-Load Doctor & Lab Fees</span>
-                    </button>
-                  </div>
-                )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {entity.entityType === 'PID' && (
+                          <button
+                            type="button"
+                            onClick={handleAutoLoadPrescribedServices}
+                            className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition-all flex items-center gap-1.5"
+                          >
+                            <Stethoscope className="w-3.5 h-3.5" />
+                            <span>Auto-Load Doctor & Lab Fees</span>
+                          </button>
+                        )}
+                        {entity.entityType === 'DID' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInvoiceItems(prev => [
+                                ...prev,
+                                { description: `Specialist Doctor Consultation (${entity.name} - ${entity.id})`, amount: Number(entity.consultation_fee) || 1200, is_test: false }
+                              ]);
+                            }}
+                            className="bg-purple-700 hover:bg-purple-800 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition-all flex items-center gap-1.5"
+                          >
+                            <Stethoscope className="w-3.5 h-3.5" />
+                            <span>+ Add Doctor Consultancy (৳{entity.consultation_fee || 1200})</span>
+                          </button>
+                        )}
+                        {entity.entityType === 'LID' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInvoiceItems(prev => [
+                                ...prev,
+                                { description: `Pathology Lab Investigation Processing Voucher (${entity.name} - ${entity.id})`, amount: 1000, is_test: false }
+                              ]);
+                            }}
+                            className="bg-blue-700 hover:bg-blue-800 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition-all flex items-center gap-1.5"
+                          >
+                            <FlaskConical className="w-3.5 h-3.5" />
+                            <span>+ Add Lab Duty / Voucher</span>
+                          </button>
+                        )}
+                        {entity.entityType === 'AID' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setInvoiceItems(prev => [
+                                ...prev,
+                                { description: `Accounts Billing Counter Settlement Voucher (${entity.name} - ${entity.id})`, amount: 1500, is_test: false }
+                              ]);
+                            }}
+                            className="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition-all flex items-center gap-1.5"
+                          >
+                            <Landmark className="w-3.5 h-3.5" />
+                            <span>+ Add Accounts Voucher</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Line Items Table & Searchable Test Catalog */}
