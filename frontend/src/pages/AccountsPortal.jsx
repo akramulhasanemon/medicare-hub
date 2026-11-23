@@ -106,7 +106,10 @@ const AccountsPortal = ({ setActivePage }) => {
       // 1. Registered accounts from localStorage
       const registered = JSON.parse(localStorage.getItem('medicare_registered_users') || '[]');
       registered.forEach(u => {
-        if (u.patient_id) {
+        const pId = (u.patient_id || '').toUpperCase();
+        // Strictly exclude doctors, lab staff, and accounts staff from patient directory
+        const isStaff = pId.startsWith('A') || pId.startsWith('D') || pId.startsWith('L') || (u.role && u.role !== 'patient');
+        if (u.patient_id && !isStaff) {
           const idx = defaultList.findIndex(p => p.patient_id.toUpperCase() === u.patient_id.toUpperCase());
           const patObj = {
             patient_id: u.patient_id,
@@ -169,88 +172,26 @@ const AccountsPortal = ({ setActivePage }) => {
     if (!searchId) return null;
     const query = String(searchId).trim().toUpperCase();
 
-    // 1. Check Patients (PID)
-    const patList = getAllPatientList();
-    const pat = patList.find(p => 
-      (p.patient_id && p.patient_id.toUpperCase() === query) ||
-      (p.name && p.name.toUpperCase() === query) ||
-      (p.phone && p.phone === query)
-    );
-    if (pat) {
-      return {
-        ...pat,
-        entityType: 'PID',
-        badge: 'PID',
-        badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-        roleLabel: 'Registered Patient (সাধারণ রোগী)',
-        id: pat.patient_id,
-        name: pat.name,
-        phone: pat.phone || '',
-        address: pat.address || 'Dhaka, Bangladesh',
-        detailPrimary: `Blood Group: ${pat.blood_group || 'O+'}`,
-        detailSecondary: `Gender: ${pat.gender || 'N/A'}`
-      };
-    }
-
-    // 2. Check Doctors (DID)
-    const docList = doctors || [];
-    const doc = docList.find(d => {
-      const code = (d.doctor_code || `D${d.id}`).toUpperCase();
-      return code === query || (d.name && d.name.toUpperCase() === query) || (d.phone && d.phone === query);
-    });
-    if (doc) {
-      const code = doc.doctor_code || `D${doc.id}`;
-      return {
-        ...doc,
-        entityType: 'DID',
-        badge: 'DID',
-        badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
-        roleLabel: 'Specialist Doctor (বিশেষজ্ঞ চিকিৎসক)',
-        id: code,
-        name: doc.name,
-        phone: doc.phone || '01711000000',
-        address: doc.address || 'MediCare Hospital Chambers, Dhaka',
-        detailPrimary: `Specialty: ${doc.specialty || 'Consultant'}`,
-        detailSecondary: `Fee: ৳${doc.consultation_fee || 1200}`
-      };
-    }
-
-    // 3. Check Lab Staff / Technologists (LID)
-    const labList = (labEmployees && labEmployees.length > 0 ? labEmployees : [
-      { employee_code: 'L101', name: 'Md. Rafiqul Islam', specialization: 'Senior Pathologist & Lab Technologist', phone: '01711223344', department: 'Pathology & Diagnostic Lab', address: 'Plot 18, Block D, Mirpur-10, Dhaka' }
-    ]);
-    const lab = labList.find(l => {
-      const code = (l.employee_code || `L${l.id}`).toUpperCase();
-      return code === query || (l.name && l.name.toUpperCase() === query) || (l.phone && l.phone === query);
-    });
-    if (lab) {
-      const code = lab.employee_code || `L${lab.id}`;
-      return {
-        ...lab,
-        entityType: 'LID',
-        badge: 'LID',
-        badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
-        roleLabel: 'Pathology Lab Staff (ক্লিনিক্যাল ল্যাব কর্মী)',
-        id: code,
-        name: lab.name,
-        phone: lab.phone || '01711223344',
-        address: lab.address || 'MediCare Hospital, Dhaka',
-        detailPrimary: `Specialization: ${lab.specialization || 'Lab Technologist'}`,
-        detailSecondary: `Dept: ${lab.department || 'Diagnostic Lab'}`
-      };
-    }
-
-    // 4. Check Accounts Staff (AID)
+    // Accounts Staff (AID)
     const accList = (accountsStaff && accountsStaff.length > 0 ? accountsStaff : [
       { account_code: 'A101', name: 'Kamal Hossain', designation: 'Chief Accounts & Billing Officer', phone: '01733445566', address: 'Sector 7, Road 14, Uttara, Dhaka' },
       { account_code: 'A102', name: 'Nusrat Jahan', designation: 'Billing Executive', phone: '01899223344', address: 'Mirpur, Dhaka' },
       { account_code: 'A103', name: 'Akramul Hasan', designation: 'Accounts Specialist', phone: '01568812468', address: 'Dhaka, Bangladesh' }
     ]);
-    const acc = accList.find(a => {
-      const code = (a.account_code || `A${a.id}`).toUpperCase();
-      return code === query || (a.name && a.name.toUpperCase() === query) || (a.phone && a.phone === query);
-    });
-    if (acc) {
+
+    // Doctors (DID)
+    const docList = doctors || [];
+
+    // Lab Staff / Technologists (LID)
+    const labList = (labEmployees && labEmployees.length > 0 ? labEmployees : [
+      { employee_code: 'L101', name: 'Md. Rafiqul Islam', specialization: 'Senior Pathologist & Lab Technologist', phone: '01711223344', department: 'Pathology & Diagnostic Lab', address: 'Plot 18, Block D, Mirpur-10, Dhaka' }
+    ]);
+
+    // Patients (PID)
+    const patList = getAllPatientList();
+
+    // Helper formatter for Accounts Staff
+    const formatAcc = (acc) => {
       const code = acc.account_code || `A${acc.id}`;
       return {
         ...acc,
@@ -265,14 +206,109 @@ const AccountsPortal = ({ setActivePage }) => {
         detailPrimary: `Designation: ${acc.designation || 'Accounts Officer'}`,
         detailSecondary: `Section: ${acc.section || 'General Billing & Counter'}`
       };
+    };
+
+    // Helper formatter for Doctors
+    const formatDoc = (doc) => {
+      const code = doc.doctor_code || `D${doc.id}`;
+      return {
+        ...doc,
+        entityType: 'DID',
+        badge: 'DID',
+        badgeColor: 'bg-purple-100 text-purple-800 border-purple-300',
+        roleLabel: 'Specialist Doctor (বিশেষজ্ঞ চিকিৎসক)',
+        id: code,
+        name: doc.name,
+        phone: doc.phone || '01711000000',
+        address: doc.address || 'MediCare Hospital Chambers, Dhaka',
+        detailPrimary: `Specialty: ${doc.specialty || 'Consultant'}`,
+        detailSecondary: `Fee: ৳${doc.consultation_fee || 1200}`
+      };
+    };
+
+    // Helper formatter for Lab Staff
+    const formatLab = (lab) => {
+      const code = lab.employee_code || `L${lab.id}`;
+      return {
+        ...lab,
+        entityType: 'LID',
+        badge: 'LID',
+        badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+        roleLabel: 'Pathology Lab Staff (ক্লিনিক্যাল ল্যাব কর্মী)',
+        id: code,
+        name: lab.name,
+        phone: lab.phone || '01711223344',
+        address: lab.address || 'MediCare Hospital, Dhaka',
+        detailPrimary: `Specialization: ${lab.specialization || 'Lab Technologist'}`,
+        detailSecondary: `Dept: ${lab.department || 'Diagnostic Lab'}`
+      };
+    };
+
+    // Helper formatter for Patients
+    const formatPat = (pat) => ({
+      ...pat,
+      entityType: 'PID',
+      badge: 'PID',
+      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      roleLabel: 'Registered Patient (সাধারণ রোগী)',
+      id: pat.patient_id,
+      name: pat.name,
+      phone: pat.phone || '',
+      address: pat.address || 'Dhaka, Bangladesh',
+      detailPrimary: `Blood Group: ${pat.blood_group || 'O+'}`,
+      detailSecondary: `Gender: ${pat.gender || 'N/A'}`
+    });
+
+    // 1. Prioritize by Prefix
+    if (query.startsWith('A')) {
+      const acc = accList.find(a => (a.account_code || `A${a.id}`).toUpperCase() === query);
+      if (acc) return formatAcc(acc);
+    }
+    if (query.startsWith('D')) {
+      const doc = docList.find(d => (d.doctor_code || `D${d.id}`).toUpperCase() === query);
+      if (doc) return formatDoc(doc);
+    }
+    if (query.startsWith('L')) {
+      const lab = labList.find(l => (l.employee_code || `L${l.id}`).toUpperCase() === query);
+      if (lab) return formatLab(lab);
+    }
+    if (query.startsWith('P')) {
+      const pat = patList.find(p => p.patient_id && p.patient_id.toUpperCase() === query);
+      if (pat) return formatPat(pat);
     }
 
-    // 5. Partial match across all entities
+    // 2. Exact match by ID across non-prefixed or different types
+    const accMatch = accList.find(a => (a.account_code || `A${a.id}`).toUpperCase() === query);
+    if (accMatch) return formatAcc(accMatch);
+
+    const docMatch = docList.find(d => (d.doctor_code || `D${d.id}`).toUpperCase() === query);
+    if (docMatch) return formatDoc(docMatch);
+
+    const labMatch = labList.find(l => (l.employee_code || `L${l.id}`).toUpperCase() === query);
+    if (labMatch) return formatLab(labMatch);
+
+    const patMatch = patList.find(p => p.patient_id && p.patient_id.toUpperCase() === query);
+    if (patMatch) return formatPat(patMatch);
+
+    // 3. Exact match by Name or Phone
+    const accByName = accList.find(a => (a.name && a.name.toUpperCase() === query) || (a.phone && a.phone === query));
+    if (accByName) return formatAcc(accByName);
+
+    const docByName = docList.find(d => (d.name && d.name.toUpperCase() === query) || (d.phone && d.phone === query));
+    if (docByName) return formatDoc(docByName);
+
+    const labByName = labList.find(l => (l.name && l.name.toUpperCase() === query) || (l.phone && l.phone === query));
+    if (labByName) return formatLab(labByName);
+
+    const patByName = patList.find(p => (p.name && p.name.toUpperCase() === query) || (p.phone && p.phone === query));
+    if (patByName) return formatPat(patByName);
+
+    // 4. Partial substring match
     const all = [
-      ...patList.map(p => ({ ...p, entityType: 'PID', id: p.patient_id })),
+      ...accList.map(a => ({ ...a, entityType: 'AID', id: a.account_code || `A${a.id}` })),
       ...docList.map(d => ({ ...d, entityType: 'DID', id: d.doctor_code || `D${d.id}` })),
       ...labList.map(l => ({ ...l, entityType: 'LID', id: l.employee_code || `L${l.id}` })),
-      ...accList.map(a => ({ ...a, entityType: 'AID', id: a.account_code || `A${a.id}` }))
+      ...patList.map(p => ({ ...p, entityType: 'PID', id: p.patient_id }))
     ];
     const partial = all.find(item => 
       (item.id && item.id.toUpperCase().includes(query)) ||
@@ -288,8 +324,8 @@ const AccountsPortal = ({ setActivePage }) => {
   // Backward compatible wrapper
   const getPatientMasterInfo = (searchId) => getUniversalEntityMasterInfo(searchId);
 
-  // Universal Multi-Entity ID Search State: PID (Patient), DID (Doctor), LID (Lab), AID (Accounts Staff), TID (Test)
-  const [idFilterCategory, setIdFilterCategory] = useState('ALL'); // 'ALL' | 'PID' | 'DID' | 'LID' | 'AID' | 'TID'
+  // Universal Multi-Entity ID Search State: PID (Patient), DID (Doctor), LID (Lab), AID (Accounts Staff) - Excludes Tests
+  const [idFilterCategory, setIdFilterCategory] = useState('ALL'); // 'ALL' | 'PID' | 'DID' | 'LID' | 'AID'
 
   const currentStatementPatient = getPatientMasterInfo(patientLookupId);
   const patientInvoices = invoices.filter(inv => 
@@ -305,6 +341,64 @@ const AccountsPortal = ({ setActivePage }) => {
   const [discountPercent, setDiscountPercent] = useState(0); // Discount in Percentage (ছাড় %)
   const [testSearchQuery, setTestSearchQuery] = useState('');
   const [showTestDropdown, setShowTestDropdown] = useState(false);
+
+  // Referred Doctor (রেফার্ড ডাক্তার) State & Logic
+  const [referredDoctor, setReferredDoctor] = useState({
+    id: 1,
+    doctor_code: 'D101',
+    name: 'Prof. Dr. Mahfuzur Rahman',
+    specialty: 'Cardiologist & Internal Medicine',
+    degrees: 'MBBS, FCPS (Cardiology), FACC (USA)',
+    consultation_fee: 1200
+  });
+  const [refDocSearchQuery, setRefDocSearchQuery] = useState('');
+  const [showRefDocDropdown, setShowRefDocDropdown] = useState(false);
+
+  const allReferredDoctorsList = [
+    {
+      id: 'OPD',
+      doctor_code: 'OPD',
+      name: 'Hospital General OPD / Self (সাধারণ বহির্বিভাগ)',
+      specialty: 'General Duty Consultation & Medical Officer',
+      degrees: 'MediCare Hospital RMO / OPD',
+      consultation_fee: 500
+    },
+    ...(doctors || [])
+  ];
+
+  const filteredReferredDoctors = allReferredDoctorsList.filter(d => {
+    if (!refDocSearchQuery.trim()) return true;
+    const q = refDocSearchQuery.trim().toLowerCase();
+    const code = (d.doctor_code || `D${d.id}`).toLowerCase();
+    return (
+      d.name.toLowerCase().includes(q) ||
+      code.includes(q) ||
+      (d.specialty && d.specialty.toLowerCase().includes(q)) ||
+      (d.degrees && d.degrees.toLowerCase().includes(q))
+    );
+  });
+
+  const handleSelectReferredDoctor = (doc) => {
+    setReferredDoctor(doc);
+    setRefDocSearchQuery('');
+    setShowRefDocDropdown(false);
+  };
+
+  const handleAddDoctorFeeToBill = () => {
+    if (!referredDoctor) return;
+    const fee = Number(referredDoctor.consultation_fee) || 1200;
+    const code = referredDoctor.doctor_code || `D${referredDoctor.id}`;
+    setInvoiceItems(prev => {
+      const isFirstEmpty = prev.length === 1 && (!prev[0].description || prev[0].description.trim() === '');
+      const docItem = {
+        description: `Doctor Specialist Consultation (${referredDoctor.name} - ${code})`,
+        amount: fee,
+        is_test: false
+      };
+      if (isFirstEmpty) return [docItem];
+      return [...prev, docItem];
+    });
+  };
 
   // Auto-sync POS when any Entity ID (PID, DID, LID, AID) is typed or selected
   const handleSelectPatientForPOS = (id) => {
@@ -333,7 +427,7 @@ const AccountsPortal = ({ setActivePage }) => {
     setShowTestDropdown(false);
   };
 
-  // Comprehensive Multi-Entity Directory Lookup (PID, DID, LID, AID, TID)
+  // Comprehensive Multi-Entity Directory Lookup (PID, DID, LID, AID) - STRICTLY EXCLUDES TESTS
   const getUniversalDirectoryItems = () => {
     const q = posSearchQuery.trim().toUpperCase();
 
@@ -434,60 +528,9 @@ const AccountsPortal = ({ setActivePage }) => {
         }
       }));
 
-    // 5. TID - Test Tokens & Investigations
-    const bookedTokens = (labBookings || [])
-      .filter(b => {
-        if (!q) return false;
-        const tNum = (b.test_number || b.id || '').toUpperCase();
-        return tNum.includes(q) || (b.package_name && b.package_name.toUpperCase().includes(q)) || (b.patient_name && b.patient_name.toUpperCase().includes(q)) || (b.patient_id && b.patient_id.toUpperCase().includes(q));
-      })
-      .map(b => ({
-        entityType: 'TID',
-        badge: 'TID Token',
-        badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
-        id: `#${b.test_number || b.id}`,
-        title: b.package_name || b.test_name,
-        subtitle: `Patient: ${b.patient_name || 'N/A'} (${b.patient_id || 'N/A'}) • ৳${b.price}`,
-        actionLabel: 'Attach Test',
-        onSelect: () => {
-          if (b.patient_id) handleSelectPatientForPOS(b.patient_id);
-          setInvoiceItems(prev => [
-            ...prev,
-            { description: b.package_name || b.test_name, amount: Number(b.price) || 800, is_test: true, test_number: b.test_number }
-          ]);
-          setPosSearchQuery('');
-          setShowPosDropdown(false);
-        }
-      }));
-
-    const masterInvestigations = (hospitalStandardTests || [])
-      .filter(t => {
-        if (!q) return true;
-        return (
-          (t.tid && t.tid.toUpperCase().includes(q)) ||
-          (t.code && t.code.toUpperCase().includes(q)) ||
-          (t.name && t.name.toUpperCase().includes(q)) ||
-          (t.category && t.category.toUpperCase().includes(q))
-        );
-      })
-      .map(t => ({
-        entityType: 'TID',
-        badge: 'TID Test',
-        badgeColor: 'bg-cyan-100 text-cyan-800 border-cyan-300',
-        id: `${t.tid} (${t.code})`,
-        title: t.name,
-        subtitle: `📁 ${t.category} • ৳${t.price}`,
-        actionLabel: '+ Add Test',
-        onSelect: () => {
-          handleQuickAddTest(t);
-          setPosSearchQuery('');
-          setShowPosDropdown(false);
-        }
-      }));
-
     let allItems = [];
     if (idFilterCategory === 'ALL') {
-      allItems = [...patients, ...doctorsList, ...labStaffList, ...accountsList, ...bookedTokens, ...masterInvestigations];
+      allItems = [...patients, ...doctorsList, ...labStaffList, ...accountsList];
     } else if (idFilterCategory === 'PID') {
       allItems = patients;
     } else if (idFilterCategory === 'DID') {
@@ -496,8 +539,6 @@ const AccountsPortal = ({ setActivePage }) => {
       allItems = labStaffList;
     } else if (idFilterCategory === 'AID') {
       allItems = accountsList;
-    } else if (idFilterCategory === 'TID') {
-      allItems = [...bookedTokens, ...masterInvestigations];
     }
 
     return allItems;
@@ -647,7 +688,10 @@ const AccountsPortal = ({ setActivePage }) => {
       discount: calculatedDiscount,
       vat: 0,
       total_amount: netTotal,
-      payment_method: paymentMethod
+      payment_method: paymentMethod,
+      referred_doctor: referredDoctor ? referredDoctor.name : 'Hospital OPD / Self',
+      referred_doctor_code: referredDoctor ? (referredDoctor.doctor_code || `D${referredDoctor.id}`) : 'OPD',
+      referred_doctor_specialty: referredDoctor ? referredDoctor.specialty : 'General OPD'
     };
 
     const res = issueInvoice(newInvData);
@@ -847,7 +891,7 @@ const AccountsPortal = ({ setActivePage }) => {
                             setShowPosDropdown(true);
                           }}
                           onFocus={() => setShowPosDropdown(true)}
-                          placeholder="Search ID (PID, DID, TID, AID)..."
+                          placeholder="Search ID (PID, DID, LID, AID)..."
                           className="w-48 sm:w-64 bg-transparent text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none"
                         />
                         {posSearchQuery && (
@@ -872,15 +916,14 @@ const AccountsPortal = ({ setActivePage }) => {
                             onClick={() => setShowPosDropdown(false)} 
                           />
                           <div className="absolute right-0 mt-1.5 w-80 sm:w-[420px] bg-white rounded-2xl shadow-2xl border border-slate-200 p-2.5 z-30 max-h-80 overflow-y-auto space-y-2 animate-in fade-in zoom-in-95 duration-100">
-                            {/* Category Filter Pills */}
+                            {/* Category Filter Pills (PID, DID, LID, AID - Strictly Excludes Tests) */}
                             <div className="flex items-center gap-1 border-b border-slate-100 pb-2 overflow-x-auto no-scrollbar">
                               {[
                                 { key: 'ALL', label: 'All IDs' },
                                 { key: 'PID', label: 'PID (Patient)' },
                                 { key: 'DID', label: 'DID (Doctor)' },
                                 { key: 'LID', label: 'LID (Lab)' },
-                                { key: 'AID', label: 'AID (Accounts)' },
-                                { key: 'TID', label: 'TID (Test)' }
+                                { key: 'AID', label: 'AID (Accounts)' }
                               ].map(cat => (
                                 <button
                                   key={cat.key}
@@ -898,13 +941,13 @@ const AccountsPortal = ({ setActivePage }) => {
                             </div>
 
                             <div className="px-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center">
-                              <span>Results ({universalDirectoryItems.length})</span>
-                              <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">PID • DID • TID • AID</span>
+                              <span>Directory Results ({universalDirectoryItems.length})</span>
+                              <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-mono">PID • DID • LID • AID</span>
                             </div>
 
                             {universalDirectoryItems.length === 0 ? (
                               <div className="p-4 text-center text-xs text-slate-500">
-                                No record found for "{posSearchQuery}". Try PID (P01), DID (D101), TID (T101/112233), or AID (A101).
+                                No person found for "{posSearchQuery}". Try PID (P01), DID (D101), LID (L101), or AID (A101).
                               </div>
                             ) : (
                               universalDirectoryItems.map((item, idx) => (
@@ -1016,11 +1059,6 @@ const AccountsPortal = ({ setActivePage }) => {
                       ]).map(a => (
                         <option key={`aid-${a.account_code || a.id}`} value={a.account_code || a.id}>
                           [AID] {a.account_code || a.id} - {a.name} ({a.designation})
-                        </option>
-                      ))}
-                      {(hospitalStandardTests || []).map(t => (
-                        <option key={`tid-${t.id}`} value={t.tid || t.code}>
-                          [TID] {t.tid} ({t.code}) - {t.name} (৳{t.price})
                         </option>
                       ))}
                     </datalist>
@@ -1160,6 +1198,201 @@ const AccountsPortal = ({ setActivePage }) => {
                     </div>
                   );
                 })()}
+              </div>
+
+              {/* REFERRED DOCTOR (রেফার্ড ডাক্তার) SEARCH & SELECTION SYSTEM */}
+              <div className="bg-gradient-to-r from-purple-50/90 via-slate-50 to-indigo-50/70 p-4 rounded-2xl border border-purple-200/90 space-y-3 shadow-2xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center font-bold">
+                      <Stethoscope className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                        <span>Referred Doctor / Consultant (রেফার্ড ডাক্তার / পরামর্শক)</span>
+                        <span className="text-[10px] bg-purple-100 text-purple-800 font-mono px-2 py-0.5 rounded-full border border-purple-200">
+                          Invoice Tag
+                        </span>
+                      </h4>
+                      <p className="text-[10px] text-slate-500">
+                        রোগীর প্রেসক্রিপশন বা রেফারেল অনুযায়ী ডাক্তার সার্চ করে সিলেক্ট করুন (রিসিপ্টে প্রিন্ট হবে)
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Active Selected Doctor Badge with 1-Click Fee Add */}
+                  {referredDoctor && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddDoctorFeeToBill}
+                        className="bg-purple-700 hover:bg-purple-800 text-white font-bold px-3 py-1.5 rounded-xl text-[11px] shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Add Dr. Fee (৳{referredDoctor.consultation_fee || 1200})</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Doctor Search Bar & Live Dropdown */}
+                <div className="relative">
+                  <div className="flex items-center bg-white border border-purple-300 hover:border-purple-500 focus-within:border-purple-600 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl px-3 py-2 shadow-xs transition-all">
+                    <Search className="w-4 h-4 text-purple-600 mr-2 shrink-0" />
+                    <input
+                      type="text"
+                      value={refDocSearchQuery}
+                      onChange={(e) => {
+                        setRefDocSearchQuery(e.target.value);
+                        setShowRefDocDropdown(true);
+                      }}
+                      onFocus={() => setShowRefDocDropdown(true)}
+                      placeholder="Search Doctor by Name, DID (e.g. D101), Specialty (Cardiology, Neuro...)..."
+                      className="w-full bg-transparent text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none"
+                    />
+                    {refDocSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRefDocSearchQuery('');
+                          setShowRefDocDropdown(false);
+                        }}
+                        className="text-slate-400 hover:text-slate-600 p-0.5 ml-1"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown with filtered doctors */}
+                  {showRefDocDropdown && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-20" 
+                        onClick={() => setShowRefDocDropdown(false)} 
+                      />
+                      <div className="absolute left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 z-30 max-h-72 overflow-y-auto space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                        <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex justify-between items-center border-b border-slate-100 pb-1.5">
+                          <span>Doctors Directory ({filteredReferredDoctors.length})</span>
+                          <span className="text-[9px] text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded font-mono">Click to Select</span>
+                        </div>
+                        {filteredReferredDoctors.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-slate-500">
+                            No doctor found for "{refDocSearchQuery}". Try doctor name (e.g. Mahfuzur) or code (D101).
+                          </div>
+                        ) : (
+                          filteredReferredDoctors.map((doc) => {
+                            const code = doc.doctor_code || `D${doc.id}`;
+                            const isCurrent = referredDoctor && (referredDoctor.doctor_code === code || referredDoctor.id === doc.id);
+                            return (
+                              <button
+                                key={`ref-doc-${doc.id}`}
+                                type="button"
+                                onClick={() => handleSelectReferredDoctor(doc)}
+                                className={`w-full text-left p-2.5 rounded-xl border transition-all flex items-center justify-between group ${
+                                  isCurrent
+                                    ? 'bg-purple-50 border-purple-300'
+                                    : 'hover:bg-slate-50 border-transparent hover:border-slate-200'
+                                }`}
+                              >
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono font-black text-[10px] text-purple-900 bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200">
+                                      {code}
+                                    </span>
+                                    <span className="font-bold text-slate-900 text-xs group-hover:text-purple-900">
+                                      {doc.name}
+                                    </span>
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 flex items-center gap-2">
+                                    <span>🩺 {doc.specialty}</span>
+                                    {doc.degrees && <span>• 🎓 {doc.degrees}</span>}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className="font-mono font-bold text-xs text-purple-900 block">
+                                    ৳ {doc.consultation_fee || 1200}
+                                  </span>
+                                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded transition-all ${
+                                    isCurrent ? 'bg-purple-700 text-white' : 'text-purple-700 bg-purple-100 group-hover:bg-purple-700 group-hover:text-white'
+                                  }`}>
+                                    {isCurrent ? '✓ Selected' : 'Select'}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Currently Selected Referred Doctor Card */}
+                {referredDoctor && (
+                  <div className="bg-white p-3 rounded-xl border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center font-bold text-xs shrink-0">
+                        👨‍⚕️
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-slate-900 text-xs">{referredDoctor.name}</span>
+                          <span className="font-mono font-bold text-[10px] bg-purple-100 text-purple-800 px-1.5 py-0.2 rounded border border-purple-200">
+                            {referredDoctor.doctor_code || `D${referredDoctor.id}`}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {referredDoctor.specialty} {referredDoctor.degrees ? `• ${referredDoctor.degrees}` : ''}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs font-mono font-bold text-purple-900 bg-purple-50 px-2 py-1 rounded-lg border border-purple-200">
+                        Fee: ৳{referredDoctor.consultation_fee || 1200}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectReferredDoctor({
+                          id: 'OPD',
+                          doctor_code: 'OPD',
+                          name: 'Hospital General OPD / Self (সাধারণ বহির্বিভাগ)',
+                          specialty: 'General Duty Consultation & Medical Officer',
+                          degrees: 'MediCare Hospital RMO / OPD',
+                          consultation_fee: 500
+                        })}
+                        className="text-[10px] text-slate-500 hover:text-rose-600 underline px-1 py-0.5"
+                      >
+                        Reset to OPD
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Doctor Selection Chips */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pt-0.5 no-scrollbar">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Quick Pick:</span>
+                  {allReferredDoctorsList.slice(0, 5).map(d => {
+                    const code = d.doctor_code || `D${d.id}`;
+                    const isSelected = referredDoctor && (referredDoctor.doctor_code === code || referredDoctor.id === d.id);
+                    return (
+                      <button
+                        key={`chip-doc-${d.id}`}
+                        type="button"
+                        onClick={() => handleSelectReferredDoctor(d)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all border shrink-0 flex items-center gap-1 ${
+                          isSelected
+                            ? 'bg-purple-700 text-white border-purple-700 shadow-xs'
+                            : 'bg-white text-slate-700 border-slate-200 hover:border-purple-400 hover:text-purple-800'
+                        }`}
+                      >
+                        <span>{code}</span>
+                        <span className="opacity-80 truncate max-w-[110px]">{d.name.split(' ').slice(-2).join(' ')}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Line Items Table & Searchable Test Catalog */}
@@ -1777,12 +2010,30 @@ const AccountsPortal = ({ setActivePage }) => {
                   <span className="font-bold font-mono text-cyan-700">{viewingInvoice.patient_id}</span>
                 </div>
                 <div>
+                  <span className="text-slate-400 block text-[10px]">Referred Doctor (রেফার্ড ডাক্তার):</span>
+                  <span className="font-bold text-purple-900 flex items-center gap-1">
+                    <Stethoscope className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                    <span>{viewingInvoice.referred_doctor || 'Hospital OPD / Self'}</span>
+                  </span>
+                  {viewingInvoice.referred_doctor_code && viewingInvoice.referred_doctor_code !== 'OPD' && (
+                    <span className="text-[10px] text-slate-500 font-mono block">
+                      Code: {viewingInvoice.referred_doctor_code} {viewingInvoice.referred_doctor_specialty ? `• ${viewingInvoice.referred_doctor_specialty}` : ''}
+                    </span>
+                  )}
+                </div>
+                <div>
                   <span className="text-slate-400 block text-[10px]">Payment Method:</span>
                   <span className="font-bold text-slate-900">{viewingInvoice.payment_method}</span>
                 </div>
-                <div>
-                  <span className="text-slate-400 block text-[10px]">Cashier / Counter:</span>
-                  <span className="font-bold text-slate-900">{viewingInvoice.cashier_code} ({viewingInvoice.counter || 'Counter #01'})</span>
+                <div className="col-span-2 pt-1 border-t border-slate-200 flex justify-between items-center text-[11px]">
+                  <div>
+                    <span className="text-slate-400">Cashier: </span>
+                    <span className="font-bold text-slate-800">{viewingInvoice.cashier_name} ({viewingInvoice.cashier_code})</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Counter: </span>
+                    <span className="font-bold text-slate-800">{viewingInvoice.counter || 'Billing Counter #01'}</span>
+                  </div>
                 </div>
               </div>
 
