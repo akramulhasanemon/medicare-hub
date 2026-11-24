@@ -73,8 +73,12 @@ export const DataProvider = ({ children }) => {
   const [doctors, setDoctors] = useState(() => {
     try {
       const saved = localStorage.getItem('medicare_doctors');
-      const parsed = saved ? JSON.parse(saved) : initialDoctors;
-      return sanitizeDoctorsList(parsed);
+      const parsed = saved ? JSON.parse(saved) : null;
+      // Upgrade local storage if new curated doctors dataset is richer
+      if (parsed && Array.isArray(parsed) && parsed.length >= initialDoctors.length) {
+        return sanitizeDoctorsList(parsed);
+      }
+      return sanitizeDoctorsList(initialDoctors);
     } catch (e) {
       return sanitizeDoctorsList(initialDoctors);
     }
@@ -545,7 +549,7 @@ export const DataProvider = ({ children }) => {
 
   const updateLabBookingStatus = (bookingId, newStatus) => {
     setLabBookings(prev =>
-      prev.map(b => (b.id === bookingId ? { ...b, status: newStatus } : b))
+      prev.map(b => (b.id === bookingId || b.test_number === bookingId || String(b.id) === String(bookingId) ? { ...b, status: newStatus } : b))
     );
   };
 
@@ -598,6 +602,9 @@ export const DataProvider = ({ children }) => {
     setLabReports(prev => [newReport, ...prev]);
     if (reportData.booking_id) {
       updateLabBookingStatus(reportData.booking_id, 'Completed');
+    }
+    if (reportData.test_number) {
+      updateLabBookingStatus(reportData.test_number, 'Completed');
     }
     return { success: true, report: newReport };
   };

@@ -57,6 +57,7 @@ const LabPortal = ({ setActivePage }) => {
 
   const [activeTab, setActiveTab] = useState('requests'); // 'requests' | 'reports' | 'patient-lookup' | 'equipment' | 'profile'
   const [searchTerm, setSearchTerm] = useState('');
+  const [reportSearchTerm, setReportSearchTerm] = useState('');
   const [patientSearchId, setPatientSearchId] = useState('P01');
   const [selectedBookingForReport, setSelectedBookingForReport] = useState(null);
   const [viewingReport, setViewingReport] = useState(null);
@@ -153,11 +154,26 @@ const LabPortal = ({ setActivePage }) => {
   const staffName = user?.name || 'Md. Rafiqul Islam';
   const staffCode = user?.patient_id || user?.employee_code || 'L101';
 
-  const pendingSamples = accountsPaidBookings.filter(b => b.status === 'Pending');
-  const confirmedSamples = accountsPaidBookings.filter(b => b.status === 'Confirmed');
-  const completedSamples = accountsPaidBookings.filter(b => b.status === 'Completed');
+  // Helper to determine if a test report has already been submitted / verified
+  const isReportSubmitted = (booking) => {
+    if (!booking) return false;
+    if (booking.status === 'Completed') return true;
+    return labReports.some(r => 
+      (r.booking_id && String(r.booking_id) === String(booking.id)) ||
+      (booking.test_number && r.test_number && String(r.test_number) === String(booking.test_number)) ||
+      (r.patient_id === booking.patient_id && (r.test_name === booking.package_name || r.test_name === booking.test_name))
+    );
+  };
 
-  const filteredBookings = accountsPaidBookings.filter(b => {
+  // Only ACTIVE tests in Requests queue (Awaiting sample collection or entering findings)
+  // Completed/submitted tests are moved strictly to Verified Reports Archive
+  const activeLabBookings = accountsPaidBookings.filter(b => !isReportSubmitted(b));
+
+  const pendingSamples = activeLabBookings.filter(b => b.status === 'Pending');
+  const confirmedSamples = activeLabBookings.filter(b => b.status === 'Confirmed');
+  const completedSamples = labReports;
+
+  const filteredBookings = activeLabBookings.filter(b => {
     if (!searchTerm.trim()) return true;
     const q = searchTerm.toLowerCase().trim();
     return (
@@ -166,8 +182,22 @@ const LabPortal = ({ setActivePage }) => {
       (b.patient_name && b.patient_name.toLowerCase().includes(q)) ||
       (b.package_name && b.package_name.toLowerCase().includes(q)) ||
       (b.invoice_code && b.invoice_code.toLowerCase().includes(q)) ||
-      (b.id && b.id.toLowerCase().includes(q)) ||
+      (b.id && String(b.id).toLowerCase().includes(q)) ||
       (b.patient_phone && b.patient_phone.includes(q))
+    );
+  });
+
+  // Filtered reports for TAB 2 (Verified Diagnostic Reports Archive)
+  const filteredReports = labReports.filter(rep => {
+    if (!reportSearchTerm.trim()) return true;
+    const q = reportSearchTerm.toLowerCase().trim();
+    return (
+      (rep.report_code && rep.report_code.toLowerCase().includes(q)) ||
+      (rep.patient_id && rep.patient_id.toLowerCase().includes(q)) ||
+      (rep.patient_name && rep.patient_name.toLowerCase().includes(q)) ||
+      (rep.test_name && rep.test_name.toLowerCase().includes(q)) ||
+      (rep.patient_phone && rep.patient_phone.includes(q)) ||
+      (rep.test_number && String(rep.test_number).toLowerCase().includes(q))
     );
   });
 
@@ -176,10 +206,10 @@ const LabPortal = ({ setActivePage }) => {
     if (!searchTerm.trim()) return null;
     const q = searchTerm.trim().toUpperCase();
 
-    // Check match on test_number
-    const testMatch = accountsPaidBookings.find(b => b.test_number && b.test_number.toUpperCase() === q);
+    // 1. Check match on test_number in active bookings
+    const testMatch = activeLabBookings.find(b => b.test_number && b.test_number.toUpperCase() === q);
     if (testMatch) {
-      const allTestsForThisPatient = accountsPaidBookings.filter(b => 
+      const allTestsForThisPatient = activeLabBookings.filter(b => 
         (testMatch.patient_id && b.patient_id && b.patient_id.toUpperCase() === testMatch.patient_id.toUpperCase()) ||
         (testMatch.invoice_code && b.invoice_code && b.invoice_code === testMatch.invoice_code)
       );
@@ -194,8 +224,8 @@ const LabPortal = ({ setActivePage }) => {
       };
     }
 
-    // Check match on patient_id
-    const patientMatches = accountsPaidBookings.filter(b => b.patient_id && b.patient_id.toUpperCase() === q);
+    // 2. Check match on patient_id in active bookings
+    const patientMatches = activeLabBookings.filter(b => b.patient_id && b.patient_id.toUpperCase() === q);
     if (patientMatches.length > 0) {
       return {
         matchType: 'patient',
@@ -204,6 +234,20 @@ const LabPortal = ({ setActivePage }) => {
         patient_phone: patientMatches[0].patient_phone,
         invoice_code: patientMatches[0].invoice_code,
         tests: patientMatches
+      };
+    }
+
+    // 3. If no active tests match, check if already completed and in Verified Reports Archive
+    const completedReport = labReports.find(r => 
+      (r.test_number && String(r.test_number).toUpperCase() === q) ||
+      (r.patient_id && r.patient_id.toUpperCase() === q) ||
+      (r.report_code && r.report_code.toUpperCase() === q) ||
+      (r.booking_id && String(r.booking_id).toUpperCase() === q)
+    );
+    if (completedReport) {
+      return {
+        matchType: 'already_submitted',
+        report: completedReport
       };
     }
 
@@ -249,6 +293,8 @@ const LabPortal = ({ setActivePage }) => {
 
     const reportData = {
       booking_id: selectedBookingForReport.id,
+      test_number: selectedBookingForReport.test_number || selectedBookingForReport.id,
+      invoice_code: selectedBookingForReport.invoice_code,
       patient_name: selectedBookingForReport.patient_name,
       patient_phone: selectedBookingForReport.patient_phone,
       patient_id: selectedBookingForReport.patient_id || 'P01',
@@ -358,7 +404,7 @@ const LabPortal = ({ setActivePage }) => {
             }`}
           >
             <FlaskConical className="w-4 h-4" />
-            Test Requests & Samples ({labBookings.length})
+            Test Requests & Samples ({activeLabBookings.length})
           </button>
 
           <button
@@ -433,11 +479,11 @@ const LabPortal = ({ setActivePage }) => {
               </div>
             </div>
 
-            {/* Quick Select Patient / Test Number Chips */}
+            {/* Quick Select Patient / Test Number Chips for Active Tests */}
             <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-xs">
               <span className="text-slate-400 font-bold text-[10px] uppercase">Quick Filter Patient / Test:</span>
-              {Array.from(new Set(accountsPaidBookings.map(b => b.patient_id).filter(Boolean))).map(pid => {
-                const sampleBooking = accountsPaidBookings.find(b => b.patient_id === pid);
+              {Array.from(new Set(activeLabBookings.map(b => b.patient_id).filter(Boolean))).map(pid => {
+                const sampleBooking = activeLabBookings.find(b => b.patient_id === pid);
                 return (
                   <button
                     key={pid}
@@ -464,8 +510,41 @@ const LabPortal = ({ setActivePage }) => {
               )}
             </div>
 
-            {/* Auto-Matched Highlight Card when Patient ID or Test ID is searched */}
-            {matchedTestOrPatient && (
+            {/* When Searched Test/Patient is already completed & in Archive */}
+            {matchedTestOrPatient && matchedTestOrPatient.matchType === 'already_submitted' && (
+              <div className="bg-emerald-50 border-2 border-emerald-300 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm animate-in fade-in duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-emerald-100 text-emerald-700 rounded-xl flex items-center justify-center font-bold shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-200 text-emerald-900 font-mono">
+                      Report #{matchedTestOrPatient.report.report_code} &bull; Submitted & Verified
+                    </span>
+                    <h5 className="font-bold text-slate-900 text-sm mt-0.5">
+                      {matchedTestOrPatient.report.test_name} — {matchedTestOrPatient.report.patient_name} (ID: {matchedTestOrPatient.report.patient_id})
+                    </h5>
+                    <p className="text-xs text-slate-600">
+                      এই টেস্টের রিপোর্ট সফলভাবে সাবমিট ও ভেরিফাই করা হয়েছে। এটি শুধুমাত্র "Verified Diagnostic Reports" আর্কাইভে সংরক্ষিত আছে।
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewingReport(matchedTestOrPatient.report);
+                    setActiveTab('reports');
+                  }}
+                  className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all shrink-0"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>View in Archive</span>
+                </button>
+              </div>
+            )}
+
+            {/* Auto-Matched Highlight Card when Active Patient ID or Test ID is searched */}
+            {matchedTestOrPatient && matchedTestOrPatient.matchType !== 'already_submitted' && (
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-300 p-5 rounded-2xl shadow-sm space-y-3 animate-in fade-in duration-200">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-blue-200 pb-2.5">
                   <div>
@@ -627,42 +706,63 @@ const LabPortal = ({ setActivePage }) => {
         {/* TAB 2: Verified Reports Archive */}
         {activeTab === 'reports' && (
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
-            <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Released Pathology & Diagnostic Reports</h3>
-                <p className="text-xs text-slate-500">Official lab slips verified by {staffName} ({staffCode})</p>
+                <h3 className="text-lg font-bold text-slate-900">Released Pathology & Diagnostic Reports (Archive)</h3>
+                <p className="text-xs text-slate-500">Official lab slips verified by {staffName} ({staffCode}) • Submissions stored permanently</p>
+              </div>
+
+              <div className="relative w-full sm:w-80">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search report by Patient Name, ID, or Test..."
+                  value={reportSearchTerm}
+                  onChange={(e) => setReportSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {labReports.map(rep => (
-                <div key={rep.id} className="p-5 rounded-2xl border border-slate-200 hover:border-blue-300 transition-all bg-slate-50/50 space-y-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-xs font-mono font-black text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded-lg">
-                        {rep.report_code}
-                      </span>
-                      <h4 className="font-bold text-slate-900 text-base mt-1">{rep.test_name}</h4>
-                      <p className="text-xs text-slate-600 font-medium">Patient: {rep.patient_name} (ID: {rep.patient_id})</p>
-                      <span className="text-[11px] text-slate-400 block font-mono">Released: {rep.verified_at}</span>
+            {filteredReports.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 space-y-1">
+                <FileText className="w-8 h-8 mx-auto text-slate-300" />
+                <p className="font-bold text-sm text-slate-600">কোনো ভেরিফাইড রিপোর্ট পাওয়া যায়নি</p>
+                <p className="text-xs">
+                  {reportSearchTerm ? `"${reportSearchTerm}" এর সাথে মিল রেখে কোনো রিপোর্ট নেই।` : 'ল্যাব টেস্ট থেকে রিপোর্ট সাবমিট করা হলে তা এখানে আর্কাইভে প্রদর্শিত হবে।'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredReports.map(rep => (
+                  <div key={rep.id} className="p-5 rounded-2xl border border-slate-200 hover:border-blue-300 transition-all bg-slate-50/50 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="text-xs font-mono font-black text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded-lg">
+                          {rep.report_code}
+                        </span>
+                        <h4 className="font-bold text-slate-900 text-base mt-1">{rep.test_name}</h4>
+                        <p className="text-xs text-slate-600 font-medium">Patient: {rep.patient_name} (ID: {rep.patient_id})</p>
+                        <span className="text-[11px] text-slate-400 block font-mono">Released: {rep.verified_at}</span>
+                      </div>
+
+                      <button
+                        onClick={() => setViewingReport(rep)}
+                        className="flex items-center gap-1 text-xs font-bold text-blue-700 hover:text-blue-800 bg-white border border-blue-200 px-3 py-1.5 rounded-xl shadow-sm hover:bg-blue-50 transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>View & Print</span>
+                      </button>
                     </div>
 
-                    <button
-                      onClick={() => setViewingReport(rep)}
-                      className="flex items-center gap-1 text-xs font-bold text-blue-700 hover:text-blue-800 bg-white border border-blue-200 px-3 py-1.5 rounded-xl shadow-sm hover:bg-blue-50 transition-colors"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>View & Print</span>
-                    </button>
+                    <div className="bg-white p-3 rounded-xl border border-slate-200/70 text-xs">
+                      <span className="font-bold text-slate-800 block mb-1">Impression:</span>
+                      <p className="text-slate-600 line-clamp-2">{rep.impression}</p>
+                    </div>
                   </div>
-
-                  <div className="bg-white p-3 rounded-xl border border-slate-200/70 text-xs">
-                    <span className="font-bold text-slate-800 block mb-1">Impression:</span>
-                    <p className="text-slate-600 line-clamp-2">{rep.impression}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
