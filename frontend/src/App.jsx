@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -81,9 +83,36 @@ class ErrorBoundary extends React.Component {
 }
 
 const AppContent = () => {
-  const [activePage, setActivePage] = useState('home');
+  const getInitialPage = () => {
+    const hash = window.location.hash.replace(/^#\/?/, '').trim();
+    if (hash) return hash;
+    const params = new URLSearchParams(window.location.search);
+    const pageParam = params.get('page');
+    if (pageParam) return pageParam;
+    return 'home';
+  };
+
+  const [activePage, setActivePageState] = useState(getInitialPage);
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
   const { user } = useAuth();
+
+  const setActivePage = (page) => {
+    setActivePageState(page);
+    window.location.hash = page;
+  };
+
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace(/^#\/?/, '').trim();
+      if (hash && hash !== activePage) {
+        setActivePageState(hash);
+      } else if (!hash && activePage !== 'home') {
+        setActivePageState('home');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [activePage]);
 
   const userRole = String(user?.role || 'patient').toLowerCase();
 
@@ -158,7 +187,7 @@ const AppContent = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#080C14] font-sans text-slate-800 dark:text-slate-100 transition-colors duration-300">
       <Navbar 
         activePage={activePage} 
         setActivePage={setActivePage} 
@@ -187,11 +216,15 @@ const AppContent = () => {
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <DataProvider>
-          <AppContent />
-        </DataProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <DataProvider>
+              <AppContent />
+            </DataProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

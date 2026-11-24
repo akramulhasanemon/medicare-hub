@@ -1,196 +1,205 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
+  Search, 
+  MapPin, 
+  Calendar, 
+  Stethoscope, 
   ShieldCheck, 
   Clock, 
-  Calendar, 
-  Award, 
   Users, 
-  Sparkles,
-  ArrowRight,
-  CheckCircle2,
+  CheckCircle,
+  Siren,
   Pill,
   FlaskConical,
-  Bot,
-  Activity,
-  Siren
+  Sparkles,
+  ArrowRight,
+  Video,
+  CreditCard,
+  Wallet,
+  Zap
 } from 'lucide-react';
 
 const Hero = ({ setActivePage }) => {
-  const { openBookingModal, openEmergencyModal } = useData();
+  const { openBookingModal, openEmergencyModal, doctors } = useData();
+  const { isBn } = useLanguage();
+  const [selectedDept, setSelectedDept] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+
+  const handleSearch = () => {
+    setActivePage('doctors');
+  };
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-cyan-50/60 via-white to-slate-50 pt-8 pb-16 lg:pt-14 lg:pb-24">
-      {/* Decorative gradient blobs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-cyan-200/40 via-blue-200/20 to-transparent blur-3xl pointer-events-none -z-10" />
+    <section className="relative overflow-hidden pt-8 pb-16 lg:pt-14 lg:pb-20 transition-colors">
+      
+      {/* Ambient background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[450px] bg-gradient-to-tr from-teal-200/30 via-sky-200/20 to-transparent dark:from-teal-900/10 dark:via-sky-950/20 blur-3xl pointer-events-none -z-10" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          
-          {/* Left Column: Heading and CTAs */}
-          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-100/80 border border-cyan-200 text-cyan-800 text-xs font-semibold shadow-sm">
-              <Sparkles className="w-4 h-4 text-cyan-600" />
-              <span>Smart Hospital, Diagnostics & E-Pharmacy Ecosystem</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-              Compassionate Care, <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">
-                World-Class Healthcare.
-              </span>
-            </h1>
-
-            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
-              Book certified specialist doctor slots, order genuine medicines online, schedule home sample collection for lab tests, or evaluate your symptoms with our AI health assistant.
-            </p>
-
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-              <button
-                onClick={() => openBookingModal()}
-                className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold px-7 py-3.5 rounded-2xl shadow-lg shadow-cyan-600/25 hover:shadow-cyan-600/35 transition-all transform hover:-translate-y-0.5"
-              >
-                <Calendar className="w-5 h-5" />
-                Book Doctor Slot
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </button>
-
-              <button
-                onClick={() => setActivePage('pharmacy')}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3.5 rounded-2xl shadow-lg shadow-emerald-600/25 transition-all"
-              >
-                <Pill className="w-4 h-4" />
-                Online Pharmacy
-              </button>
-
-              <button
-                onClick={() => openEmergencyModal()}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-5 py-3.5 rounded-2xl border border-rose-200 transition-all"
-              >
-                <Siren className="w-4 h-4 text-rose-600" />
-                24/7 Ambulance SOS
-              </button>
-            </div>
-
-            {/* Quick feature shortcuts */}
-            <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-2.5 text-xs font-bold">
-              <button
-                onClick={() => setActivePage('symptom-checker')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-50 text-cyan-800 hover:bg-cyan-100 transition-colors border border-cyan-100"
-              >
-                <Bot className="w-3.5 h-3.5 text-cyan-600" />
-                <span>AI Symptom Triage</span>
-              </button>
-              <button
-                onClick={() => setActivePage('lab-tests')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-800 hover:bg-blue-100 transition-colors border border-blue-100"
-              >
-                <FlaskConical className="w-3.5 h-3.5 text-blue-600" />
-                <span>Pathology & Lab Packages</span>
-              </button>
-              <button
-                onClick={() => setActivePage('health-tools')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-purple-800 hover:bg-purple-100 transition-colors border border-purple-100"
-              >
-                <Activity className="w-3.5 h-3.5 text-purple-600" />
-                <span>BMI & Vitals Tools</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column: Hero Visual Card */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
-              
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gradient-to-tr from-cyan-600 to-blue-700">
-                <img
-                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80"
-                  alt="Doctor with patient"
-                  className="w-full h-96 lg:h-[480px] object-cover object-top opacity-95 hover:scale-105 transition-transform duration-700"
-                />
-                
-                {/* Floating emergency badge */}
-                <div 
-                  onClick={openEmergencyModal}
-                  className="absolute top-4 left-4 bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-lg flex items-center gap-3 border border-white/50 cursor-pointer hover:bg-white"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                    <Siren className="w-5 h-5 animate-pulse" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-slate-500 font-semibold uppercase">Ambulance Service</p>
-                    <p className="text-xs font-bold text-rose-600">Call SOS Now</p>
-                  </div>
-                </div>
-
-                {/* Floating doctor stats badge */}
-                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-3.5 shadow-xl flex items-center gap-3.5 border border-white/50">
-                  <div className="w-11 h-11 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center font-bold">
-                    <ShieldCheck className="w-6 h-6 text-cyan-600" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-base font-black text-slate-900">4.9</span>
-                      <span className="text-amber-500 text-xs">★★★★★</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 font-medium">99.2% Patient Satisfaction</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -bottom-6 -left-6 w-36 h-36 bg-blue-500/20 rounded-full blur-2xl -z-10" />
-              <div className="absolute -top-6 -right-6 w-36 h-36 bg-cyan-500/20 rounded-full blur-2xl -z-10" />
-            </div>
-          </div>
-
+        
+        {/* Top Tagline Pill */}
+        <div className="text-center mb-6">
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-700/50 shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+            <span>
+              {isBn 
+                ? 'বাংলাদেশের প্রথম সম্পূর্ণ ডিজিটাল স্বাস্থ্যসেবা প্ল্যাটফর্ম' 
+                : "Bangladesh's First Complete Digital Healthcare Ecosystem"
+              }
+            </span>
+          </span>
         </div>
 
-        {/* Highlight Stats Row */}
-        <div className="mt-14 pt-8 border-t border-slate-200/80 grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-cyan-50 text-cyan-600 flex items-center justify-center shrink-0">
-              <Users className="w-6 h-6" />
+        {/* Hero Title & Subtitle */}
+        <div className="text-center max-w-3xl mx-auto mb-10">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] mb-5 text-slate-900 dark:text-white">
+            {isBn ? (
+              <>আপনার স্বাস্থ্য সুরক্ষায় <br /><span className="gradient-text">ডিজিটাল স্পন্দন</span></>
+            ) : (
+              <>Smart Healthcare Reimagined for <br /><span className="gradient-text">Bangladesh</span></>
+            )}
+          </h1>
+          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl mx-auto">
+            {isBn 
+              ? 'ঘরে বসেই পান বিএমডিসি নিবন্ধিত বিশেষজ্ঞ ডাক্তার, অনুমোদিত ল্যাব টেস্ট, ২ ঘণ্টায় ওষুধ ডেলিভারি এবং ২৪/৭ জাতীয় জরুরি অ্যাম্বুলেন্স সেবা।'
+              : 'Access BMDC registered specialist doctors, certified diagnostic lab packages with home sample collection, express medicine delivery, and 24/7 ICU ambulance dispatch.'
+            }
+          </p>
+        </div>
+
+        {/* Live Search & Filter Bar (Dual-Theme Bento Container) */}
+        <div className="max-w-3xl mx-auto mb-12">
+          <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-2.5 sm:p-3 shadow-xl dark:shadow-slate-950/60 flex flex-col sm:flex-row items-center gap-2.5 transition-colors">
+            
+            {/* Department Select */}
+            <div className="flex items-center gap-2.5 w-full sm:flex-1 px-3 py-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+              <Stethoscope className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+              <select
+                value={selectedDept}
+                onChange={(e) => setSelectedDept(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer"
+              >
+                <option value="" className="dark:bg-slate-800">{isBn ? 'বিশেষজ্ঞ বিভাগ বেছে নিন' : 'Select Department'}</option>
+                <option value="Medicine" className="dark:bg-slate-800">{isBn ? 'মেডিসিন ও ইন্টারনাল কেয়ার' : 'General Medicine'}</option>
+                <option value="Cardiology" className="dark:bg-slate-800">{isBn ? 'কার্ডিওলজি (হৃদরোগ)' : 'Cardiology'}</option>
+                <option value="Pediatrics" className="dark:bg-slate-800">{isBn ? 'শিশু রোগ বিশেষজ্ঞ (Pediatrics)' : 'Pediatrics (Child)'}</option>
+                <option value="Gynecology" className="dark:bg-slate-800">{isBn ? 'গাইনি ও প্রসূতি রোগ' : 'Gynecology & Obstetrics'}</option>
+                <option value="Neurology" className="dark:bg-slate-800">{isBn ? 'নিউরোমেডিসিন' : 'Neuromedicine'}</option>
+              </select>
+            </div>
+
+            {/* Location Select */}
+            <div className="flex items-center gap-2.5 w-full sm:flex-1 px-3 py-2 rounded-xl bg-slate-50/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+              <MapPin className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0" />
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                className="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer"
+              >
+                <option value="" className="dark:bg-slate-800">{isBn ? 'লোকেশন / জেলা' : 'Select City / District'}</option>
+                <option value="Dhaka" className="dark:bg-slate-800">ঢাকা (Dhaka Metropolitan)</option>
+                <option value="Chattogram" className="dark:bg-slate-800">চট্টগ্রাম (Chattogram)</option>
+                <option value="Sylhet" className="dark:bg-slate-800">সিলেট (Sylhet)</option>
+                <option value="Rajshahi" className="dark:bg-slate-800">রাজশাহী (Rajshahi)</option>
+              </select>
+            </div>
+
+            {/* Search CTA Button */}
+            <button
+              onClick={handleSearch}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-teal-600/25 transition-all shrink-0"
+            >
+              <Search className="w-4 h-4" />
+              <span>{isBn ? 'ডাক্তার খুঁজুন' : 'Find Doctor'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4 Bento Live Stat Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-10">
+          
+          <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+            <div className="w-11 h-11 rounded-xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+              <Users className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-black text-slate-900">12,500+</p>
-              <p className="text-xs text-slate-500 font-medium">Happy Patients</p>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                {isBn ? <span className="font-bn">৫০০+</span> : <span className="font-en">500+</span>}
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                {isBn ? 'বিএমডিসি নিবন্ধিত ডাক্তার' : 'BMDC Verified Doctors'}
+              </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <Award className="w-6 h-6" />
+          <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+            <div className="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+              <Clock className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-black text-slate-900">45+</p>
-              <p className="text-xs text-slate-500 font-medium">Expert Doctors</p>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                {isBn ? <span className="font-bn">১৫ মিনিট</span> : <span className="font-en">15 min</span>}
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                {isBn ? 'জরুরি অ্যাম্বুলেন্স রেসপন্স' : 'Emergency Ambulance'}
+              </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <Pill className="w-6 h-6" />
+          <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+            <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
+              <CheckCircle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-black text-slate-900">5,000+</p>
-              <p className="text-xs text-slate-500 font-medium">Medicines Delivered</p>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                {isBn ? <span className="font-bn">৫০,০০০+</span> : <span className="font-en">50,000+</span>}
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                {isBn ? 'সন্তুষ্ট সুস্থ রোগী' : 'Treated Patients'}
+              </div>
             </div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-              <Clock className="w-6 h-6" />
+          <div className="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+            <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-2xl font-black text-slate-900">15 min</p>
-              <p className="text-xs text-slate-500 font-medium">Emergency Response</p>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                {isBn ? <span className="font-bn">৬৪ জেলা</span> : <span className="font-en">64 Districts</span>}
+              </div>
+              <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                {isBn ? 'সারাদেশে হোম ল্যাব সেবা' : 'Districts Covered'}
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Payment Badges (Clean Lucide Icons, Zero Emojis) */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs text-slate-500 dark:text-slate-400">
+          <span className="font-medium mr-1">{isBn ? 'সমর্থিত পেমেন্ট মেথড:' : 'Accepted Payments:'}</span>
+          
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800/40 font-bold text-xs">
+            <span className="text-sm font-black text-pink-600">b</span>bKash
+          </span>
+
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/40 font-bold text-xs">
+            <Wallet className="w-3.5 h-3.5 text-orange-600" />Nagad
+          </span>
+
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40 font-bold text-xs">
+            <Zap className="w-3.5 h-3.5 text-purple-600" />Rocket
+          </span>
+
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40 font-bold text-xs">
+            <CreditCard className="w-3.5 h-3.5 text-blue-600" />Card / COD
+          </span>
         </div>
 
       </div>
-    </div>
+    </section>
   );
 };
 

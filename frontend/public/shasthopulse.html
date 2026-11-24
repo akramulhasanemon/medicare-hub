@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="bn" class="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>ShasthoPulse | স্বাস্থ্য পালস — স্মার্ট ডিজিটাল স্বাস্থ্যসেবা বাংলাদেশ</title>
+<!-- Google Fonts: Hind Siliguri (Primary Bangla) & Inter (English) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://unpkg.com/lucide@0.383.0/dist/umd/lucide.js"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        teal: { 50:'#f0fdfa', 100:'#ccfbf1', 200:'#99f6e4', 300:'#5eead4', 400:'#2dd4bf', 500:'#14b8a6', 600:'#0d9488', 700:'#0f766e', 800:'#115e59', 900:'#134e4a' },
+        emerald: { 50:'#ecfdf5', 100:'#d1fae5', 500:'#10b981', 600:'#059669', 700:'#047857' },
+        sky: { 500:'#0ea5e9', 600:'#0284c7', 700:'#0369a1' },
+        rose: { 500:'#f43f5e', 600:'#e11d48', 700:'#be123c' },
+        obsidian: '#080C14',
+      },
+      fontFamily: {
+        bn: ['Hind Siliguri', 'sans-serif'],
+        en: ['Inter', 'sans-serif'],
+        sans: ['Hind Siliguri', 'Inter', 'sans-serif'],
+      },
+    }
+  }
+}
+</script>
+<style>
+  :root {
+    --color-primary: #0D9488;
+    --color-secondary: #0284C7;
+    --color-sos: #E11D48;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  
+  /* Primary Bangla Typography */
+  body { 
+    font-family: 'Hind Siliguri', 'Inter', sans-serif;
+    background-color: #F8FAFC;
+    color: #0F172A;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  .font-en { font-family: 'Inter', sans-serif; }
+  .font-bn { font-family: 'Hind Siliguri', sans-serif; }
+
+  /* ========================================================
+     High-Contrast Modern Surfaces (Light & Dark)
+     ======================================================== */
+  /* Light Mode Surface: Crisp, elevated with soft ambient depth */
+  .glass { 
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    backdrop-filter: blur(12px);
+  }
+  .glass-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 20px -2px rgba(13, 148, 136, 0.06);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .glass-card:hover {
+    transform: translateY(-4px);
+    border-color: #99F6E4;
+    box-shadow: 0 12px 30px -4px rgba(13, 148, 136, 0.12);
+  }
+
+  /* Dark Mode Surface: Deep Obsidian with subtle slate borders */
+  html.dark body { 
+    background-color: #080C14 !important; 
+    color: #F1F5F9 !important; 
+  }
+  html.dark .glass { 
+    background: rgba(15, 23, 42, 0.94) !important; 
+    border: 1px solid rgba(51, 65, 85, 0.6) !important; 
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5) !important; 
+  }
+  html.dark .glass-card {
+    background: #0F172A !important;
+    border: 1px solid rgba(51, 65, 85, 0.7) !important;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4) !important;
+  }
+  html.dark .glass-card:hover {
+    border-color: #0D9488 !important;
+    box-shadow: 0 12px 32px -4px rgba(13, 148, 136, 0.25) !important;
+  }
+  html.dark .modal-box { 
+    background: #0F172A !important; 
+    border: 1px solid #334155 !important; 
+    color: #F8FAFC !important; 
+  }
+  html.dark input, html.dark select, html.dark textarea { 
+    background-color: #1E293B !important; 
+    border-color: #334155 !important; 
+    color: #F8FAFC !important; 
+  }
+
+  /* Gradient Headings */
+  .gradient-text { 
+    background: linear-gradient(135deg, #0D9488 0%, #0284C7 50%, #059669 100%); 
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    background-clip: text; 
+  }
+
+  /* Emergency Pulse Dot */
+  @keyframes pulseRing { 
+    0% { transform: scale(0.8); opacity: 1; } 
+    100% { transform: scale(2.2); opacity: 0; } 
+  }
+  .pulse-dot { 
+    position: relative; 
+    display: inline-block; 
+    width: 9px; 
+    height: 9px; 
+    border-radius: 50%; 
+    background: #FFFFFF; 
+  }
+  .pulse-dot::before { 
+    content: ''; 
+    position: absolute; 
+    inset: -4px; 
+    border-radius: 50%; 
+    background: #FFFFFF; 
+    animation: pulseRing 1.4s ease-out infinite; 
+  }
+
+  /* Strict Dynamic Language Visibility */
+  html[lang="bn"] [data-en] { display: none !important; }
+  html[lang="en"] [data-bn] { display: none !important; }
+
+  /* Smooth Theme Transition */
+  body, .glass, .glass-card, header, footer, .modal-box { 
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease; 
+  }
+
+  /* Modal Overlays */
+  .modal-overlay { 
+    display: none; 
+    position: fixed; 
+    inset: 0; 
+    background: rgba(8, 12, 20, 0.7); 
+    backdrop-filter: blur(8px); 
+    z-index: 999; 
+    align-items: center; 
+    justify-content: center; 
+  }
+  .modal-overlay.active { display: flex; }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #0D9488; border-radius: 3px; }
+</style>
+</head>
+<body class="bg-slate-50 dark:bg-[#080C14] text-slate-800 dark:text-slate-100 font-bn">
+
+<!-- ============================================================ -->
+<!-- 1. TOP EMERGENCY SOS BAR (ZERO AI EMOJIS) -->
+<!-- ============================================================ -->
+<div id="emergencyBar" class="bg-rose-600 dark:bg-rose-700 text-white text-xs py-2 px-4 text-center font-medium relative overflow-hidden transition-colors">
+  <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-2.5">
+      <i data-lucide="siren" class="w-4 h-4 text-white animate-pulse"></i>
+      <span data-bn>জাতীয় জরুরি সেবা: <strong class="font-bold underline">৯৯৯</strong> &nbsp;|&nbsp; ২৪/৭ অ্যাম্বুলেন্স ও ডাক্তার সহায়তা:</span>
+      <span data-en>National Emergency: <strong class="font-bold underline">999</strong> &nbsp;|&nbsp; 24/7 Ambulance & Doctor Helpline:</span>
+      <a href="tel:+8801700000000" class="font-bold underline tracking-wider hover:text-rose-200">
+        <span data-bn class="font-bn">+৮৮০ ১৭০০-০০০০০০</span>
+        <span data-en class="font-en">+880 1700-000000</span>
+      </a>
+      <span class="inline-flex items-center gap-1.5 ml-2">
+        <span class="pulse-dot"></span>
+        <span class="text-[11px] font-semibold text-rose-100 ml-1" data-bn>সক্রিয়</span>
+        <span class="text-[11px] font-semibold text-rose-100 ml-1" data-en>Live</span>
+      </span>
+    </div>
+    <div>
+      <button onclick="openModal('ambulanceModal')" class="inline-flex items-center gap-1.5 bg-white text-rose-700 hover:bg-rose-50 text-xs font-bold px-3 py-1 rounded-full shadow-sm transition-all">
+        <i data-lucide="phone-call" class="w-3.5 h-3.5 text-rose-600"></i>
+        <span data-bn>জরুরি অ্যাম্বুলেন্স ডাকুন</span>
+        <span data-en>Dispatch Ambulance</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 2. NAVBAR -->
+<!-- ============================================================ -->
+<header class="sticky top-0 z-50 glass border-b border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between gap-4">
+
+    <!-- Bespoke Logo (Medical Cross + ECG Heartbeat Wave + Glowing Core) -->
+    <a href="#" class="flex items-center gap-3.5 shrink-0 group">
+      <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-teal-600 via-teal-500 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/30 group-hover:scale-105 transition-transform shrink-0">
+        <svg class="w-7 h-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 6C16 4.89543 16.8954 4 18 4H22C23.1046 4 24 4.89543 24 6V14H32C33.1046 14 34 14.8954 34 16V20C34 21.1046 33.1046 22 32 22H24V32C24 33.1046 23.1046 34 22 34H18C16.8954 34 16 33.1046 16 32V22H8C6.89543 22 6 21.1046 6 20V16C6 14.8954 6.89543 14 8 14H16V6Z" fill="white" fill-opacity="0.22" />
+          <path d="M5 20H13L16 11L21 28L25 15L28 22H35" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="28" cy="22" r="2.2" fill="#5EEAD4" />
+        </svg>
+      </div>
+      <div class="leading-tight">
+        <div data-bn>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-bn tracking-tight">স্বাস্থ্য<span class="text-teal-600 dark:text-teal-400">পালস</span></span>
+            <span class="text-[10px] font-bold bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-700/50">BD</span>
+          </div>
+          <div class="text-[11px] text-teal-700 dark:text-teal-400 font-medium font-bn">ডিজিটাল স্মার্ট স্বাস্থ্যসেবা</div>
+        </div>
+        <div data-en>
+          <div class="flex items-center gap-1.5">
+            <span class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-en tracking-tight">Shastho<span class="text-teal-600 dark:text-teal-400">Pulse</span></span>
+            <span class="text-[10px] font-bold bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-700/50">BD</span>
+          </div>
+          <div class="text-[11px] text-teal-700 dark:text-teal-400 font-medium font-en">Smart Digital Healthcare</div>
+        </div>
+      </div>
+    </a>
+
+    <!-- Desktop Nav Links -->
+    <nav class="hidden lg:flex items-center gap-7 text-xs font-bold text-slate-600 dark:text-slate-300">
+      <a href="#doctors" class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+        <span data-bn>ডাক্তারগণ</span><span data-en>Doctors</span>
+      </a>
+      <a href="#services" class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+        <span data-bn>সেবাসমূহ</span><span data-en>Services</span>
+      </a>
+      <a href="#lab" class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+        <span data-bn>ল্যাব টেস্ট</span><span data-en>Diagnostic Lab</span>
+      </a>
+      <a href="#vault" class="hover:text-teal-600 dark:hover:text-teal-400 transition-colors">
+        <span data-bn>মেডিকেল রেকর্ড (PID)</span><span data-en>Patient Vault (PID)</span>
+      </a>
+    </nav>
+
+    <!-- Controls: Language, Theme & Auth -->
+    <div class="flex items-center gap-2.5">
+      
+      <!-- Language Toggle -->
+      <button onclick="toggleLang()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-colors">
+        <i data-lucide="globe" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+        <span id="langLabel" class="text-xs">বাংলা</span>
+      </button>
+
+      <!-- Theme Toggle -->
+      <button id="themeToggle" onclick="toggleTheme()" class="w-9 h-9 rounded-xl flex items-center justify-center border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" aria-label="Toggle theme">
+        <i data-lucide="sun" class="w-4 h-4 text-amber-500 dark:hidden"></i>
+        <i data-lucide="moon" class="w-4 h-4 text-teal-400 hidden dark:block"></i>
+      </button>
+
+      <!-- Sign In CTA Button -->
+      <button onclick="openModal('loginModal')" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl border border-teal-500/40 bg-teal-50/70 dark:bg-teal-950/50 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-xs font-bold text-teal-700 dark:text-teal-300 transition-colors shadow-sm">
+        <i data-lucide="log-in" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+        <span data-bn>সাইন ইন</span>
+        <span data-en>Sign In</span>
+      </button>
+
+      <!-- Book Slot CTA -->
+      <button onclick="openModal('bookModal')" class="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold shadow-md shadow-teal-600/20 transition-all">
+        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+        <span data-bn>অ্যাপয়েন্টমেন্ট বুকিং</span>
+        <span data-en>Book Appointment</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- 3. HERO SECTION (BENTO GRID WITH PERFECT LIGHT/DARK STYLING) -->
+<!-- ============================================================ -->
+<section class="relative overflow-hidden pt-10 pb-16 lg:pt-16 lg:pb-20 transition-colors">
+  
+  <!-- Subtle Ambient Glow -->
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-tr from-teal-200/30 via-sky-200/20 to-transparent dark:from-teal-900/10 dark:via-sky-950/20 blur-3xl pointer-events-none -z-10"></div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Tagline Badge -->
+    <div class="text-center mb-6">
+      <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-700/50 shadow-sm">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+        <span data-bn>বাংলাদেশের প্রথম সম্পূর্ণ স্মার্ট ডিজিটাল স্বাস্থ্যসেবা প্ল্যাটফর্ম</span>
+        <span data-en>Bangladesh's First Complete Smart Digital Healthcare Platform</span>
+      </span>
+    </div>
+
+    <!-- Main Heading -->
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] mb-5 text-slate-900 dark:text-white">
+        <span data-bn>আপনার স্বাস্থ্য সুরক্ষায় <br /><span class="gradient-text">ডিজিটাল স্পন্দন</span></span>
+        <span data-en>Smart Healthcare Reimagined for <br /><span class="gradient-text">Bangladesh</span></span>
+      </h1>
+      <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto" data-bn>
+        ঘরে বসেই পান বিএমডিসি নিবন্ধিত বিশেষজ্ঞ ডাক্তার, অনুমোদিত ডায়াগনস্টিক টেস্ট, ২ ঘণ্টায় ওষুধ ডেলিভারি এবং ২৪/৭ জরুরি অ্যাম্বুলেন্স সেবা।
+      </p>
+      <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto font-en" data-en>
+        Access BMDC certified specialist doctors, home diagnostic sample collection, authentic medicine delivery in 2 hours, and 24/7 rapid ambulance dispatch.
+      </p>
+    </div>
+
+    <!-- Live Search Bento Bar -->
+    <div class="max-w-3xl mx-auto mb-12">
+      <div class="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-3 shadow-lg flex flex-col sm:flex-row items-center gap-2.5 transition-colors">
+        
+        <!-- Specialty Dropdown -->
+        <div class="flex items-center gap-2.5 w-full sm:flex-1 px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+          <i data-lucide="stethoscope" class="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0"></i>
+          <select id="heroSpecialtySelect" class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer">
+            <!-- Dynamically populated options for 100% clean language rendering -->
+          </select>
+        </div>
+
+        <!-- Location Dropdown -->
+        <div class="flex items-center gap-2.5 w-full sm:flex-1 px-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700">
+          <i data-lucide="map-pin" class="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0"></i>
+          <select id="heroLocationSelect" class="w-full bg-transparent text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-100 focus:outline-none cursor-pointer">
+            <!-- Dynamically populated options -->
+          </select>
+        </div>
+
+        <!-- Find Doctor Button -->
+        <a href="#doctors" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-teal-600/20 transition-all shrink-0">
+          <i data-lucide="search" class="w-4 h-4"></i>
+          <span data-bn>ডাক্তার খুঁজুন</span>
+          <span data-en>Find Doctor</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- 4 Live Stat Cards (Elevated & High Contrast) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto mb-10">
+      
+      <!-- Card 1 -->
+      <div class="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+        <div class="w-11 h-11 rounded-xl bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
+          <i data-lucide="users" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            <span data-bn class="font-bn">৫০০+</span>
+            <span data-en class="font-en">500+</span>
+          </div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium" data-bn>বিএমডিসি নিবন্ধিত ডাক্তার</div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium font-en" data-en>Verified Doctors</div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+        <div class="w-11 h-11 rounded-xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
+          <i data-lucide="clock" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            <span data-bn class="font-bn">১৫ মিনিট</span>
+            <span data-en class="font-en">15 min</span>
+          </div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium" data-bn>জরুরি অ্যাম্বুলেন্স রেসপন্স</div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium font-en" data-en>Rapid Ambulance</div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+        <div class="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 shrink-0">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            <span data-bn class="font-bn">৫০,০০০+</span>
+            <span data-en class="font-en">50,000+</span>
+          </div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium" data-bn>সন্তুষ্ট সুস্থ রোগী</div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium font-en" data-en>Recovered Patients</div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-3.5 transition-all hover:scale-105 shadow-md dark:shadow-slate-950/50">
+        <div class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+            <span data-bn class="font-bn">৬৪ জেলা</span>
+            <span data-en class="font-en">64 Districts</span>
+          </div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium" data-bn>সারাদেশে সেবা উপলব্ধ</div>
+          <div class="text-xs text-slate-600 dark:text-slate-400 font-medium font-en" data-en>Districts Covered</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Badges (Clean SVG / Lucide, Zero Emojis) -->
+    <div class="flex flex-wrap items-center justify-center gap-2.5 text-xs text-slate-500 dark:text-slate-400">
+      <span class="font-medium mr-1" data-bn>সমর্থিত পেমেন্ট মেথড:</span>
+      <span class="font-medium mr-1 font-en" data-en>Accepted Payments:</span>
+
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800/40 font-bold text-xs">
+        <span class="text-sm font-black text-pink-600 font-en">b</span>bKash
+      </span>
+
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800/40 font-bold text-xs">
+        <i data-lucide="wallet" class="w-3.5 h-3.5 text-orange-600"></i>Nagad
+      </span>
+
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40 font-bold text-xs">
+        <i data-lucide="zap" class="w-3.5 h-3.5 text-purple-600"></i>Rocket
+      </span>
+
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40 font-bold text-xs">
+        <i data-lucide="credit-card" class="w-3.5 h-3.5 text-blue-600"></i><span class="font-en">Card / COD</span>
+      </span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 4. CORE SERVICES HUB (BENTO ACTION CARDS) -->
+<!-- ============================================================ -->
+<section id="services" class="py-16 bg-white dark:bg-slate-900/50 border-y border-slate-200/80 dark:border-slate-800/80 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-700/50 mb-3">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+        <span data-bn>প্রধান ডিজিটাল সেবাসমূহ</span>
+        <span data-en>Core Digital Pillars</span>
+      </span>
+      <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
+        <span data-bn>এক প্ল্যাটফর্মে সম্পূর্ণ <span class="gradient-text">চিকিৎসা সমাধান</span></span>
+        <span data-en>Complete Care on a <span class="gradient-text">Single Platform</span></span>
+      </h2>
+      <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed" data-bn>
+        ডাক্তার অ্যাপয়েন্টমেন্ট থেকে শুরু করে ডায়াগনস্টিক রিপোর্ট এবং জরুরি অ্যাম্বুলেন্স — প্রতিটি সেবা পরিচালিত হয় সর্বোচ্চ প্রফেশনালিজমে।
+      </p>
+      <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed font-en" data-en>
+        From specialist chamber bookings to certified diagnostic lab tests and express ambulance dispatch — all managed seamlessly.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <!-- Card 1: Doctor Appointment -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-5">
+            <i data-lucide="stethoscope" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" data-bn>ডাক্তার অ্যাপয়েন্টমেন্ট</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-en" data-en>Doctor Consultation</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4" data-bn>
+            চেম্বার ও ভিডিও কনসালটেশন। বিএমডিসি নিবন্ধিত অধ্যাপক ও বিশেষজ্ঞ ডাক্তারদের সরাসরি অ্যাপয়েন্টমেন্ট।
+          </p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4 font-en" data-en>
+            OPD chamber and online telemedicine with BMDC certified professors and consultants.
+          </p>
+          <div class="text-xs font-bold text-teal-600 dark:text-teal-400 mb-4" data-bn>ফি শুরু ৳৫০০ থেকে</div>
+          <div class="text-xs font-bold text-teal-600 dark:text-teal-400 mb-4 font-en" data-en>Fee starts from ৳500</div>
+        </div>
+        <button onclick="openModal('bookModal')" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors">
+          <span data-bn>বুক অ্যাপয়েন্টমেন্ট</span>
+          <span data-en>Book Appointment</span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Card 2: Diagnostic Lab -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center mb-5">
+            <i data-lucide="flask-conical" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" data-bn>ডায়াগনস্টিক ও ল্যাব টেস্ট</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-en" data-en>Diagnostic & Lab Tests</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4" data-bn>
+            বাসায় বসে নমুনা সংগ্রহের সুবিধা। স্বয়ংক্রিয় ল্যাব আইডি ট্র্যাকিং এবং অনলাইনে ৪ ঘণ্টায় ভেরিফাইড রিপোর্ট।
+          </p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4 font-en" data-en>
+            Home sample collection across districts. Sequential Lab ID tracking with verified digital report download.
+          </p>
+          <div class="text-xs font-bold text-sky-600 dark:text-sky-400 mb-4" data-bn>টেস্ট প্যাকেজ ৳৩০০ থেকে</div>
+          <div class="text-xs font-bold text-sky-600 dark:text-sky-400 mb-4 font-en" data-en>Test packages from ৳300</div>
+        </div>
+        <a href="#lab" class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors">
+          <span data-bn>ল্যাব টেস্ট দেখুন</span>
+          <span data-en>Explore Tests</span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </a>
+      </div>
+
+      <!-- Card 3: Online Pharmacy -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-5">
+            <i data-lucide="pill" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" data-bn>অনলাইন ফার্মেসি এক্সপ্রেস</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-en" data-en>Medicine Express</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4" data-bn>
+            ১০০% অরিজিনাল ওষুধ ও প্রেসক্রিপশন ডেলিভারি। ঢাকা শহরে ২ ঘণ্টার মধ্যে ক্যাশ অন ডেলিভারি বা বিকাশে পেমেন্ট।
+          </p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4 font-en" data-en>
+            100% genuine pharmaceutical drugs delivered to your doorstep within 2 hours with bKash/Nagad.
+          </p>
+          <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-4" data-bn>ফ্রি ডেলিভারি ৳১০০০+ অর্ডারে</div>
+          <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-4 font-en" data-en>Free delivery on ৳1000+</div>
+        </div>
+        <button onclick="showToast('ফার্মেসি সার্ভিস শীঘ্রই আসছে!', 'Pharmacy express store is launching soon!')" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors">
+          <span data-bn>ফার্মেসি অর্ডার</span>
+          <span data-en>Order Medicine</span>
+          <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+
+      <!-- Card 4: Emergency Ambulance -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col justify-between border-rose-200/80 dark:border-rose-900/50">
+        <div>
+          <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-5">
+            <i data-lucide="siren" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" data-bn>জরুরি আইসিইউ অ্যাম্বুলেন্স</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-en" data-en>Emergency Ambulance</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4" data-bn>
+            অক্সিজেন, এসি ও আইসিইউ/সিসিইউ সুবিধাযুক্ত অ্যাম্বুলেন্স। জাতীয় জরুরি ৯৯৯ ইন্টিগ্রেশন ও লাইভ ড্রাইভার ট্র্যাকিং।
+          </p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4 font-en" data-en>
+            Oxygen, AC and critical ICU/CCU ambulances. Direct 999 hotline dispatch across Dhaka and districts.
+          </p>
+          <div class="text-xs font-bold text-rose-600 dark:text-rose-400 mb-4" data-bn>১৫ মিনিটে ইনস্ট্যান্ট ডিসপ্যাচ</div>
+          <div class="text-xs font-bold text-rose-600 dark:text-rose-400 mb-4 font-en" data-en>15-min Rapid Dispatch</div>
+        </div>
+        <button onclick="openModal('ambulanceModal')" class="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-colors">
+          <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+          <span data-bn>অ্যাম্বুলেন্স কল করুন</span>
+          <span data-en>Dispatch Ambulance</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 5. FEATURED BMDC DOCTORS SHOWCASE (REAL PHOTOS, NO COLORED LETTERS) -->
+<!-- ============================================================ -->
+<section id="doctors" class="py-16 sm:py-20 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+      <div>
+        <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-700/50 mb-2">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+          <span data-bn>শীর্ষ বিশেষজ্ঞ ডাক্তার</span>
+          <span data-en>Top Rated Specialists</span>
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mt-1">
+          <span data-bn>বিএমডিসি অনুমোদিত <span class="gradient-text">বিশেষজ্ঞ চিকিৎসকবৃন্দ</span></span>
+          <span data-en>BMDC Certified <span class="gradient-text">Specialist Doctors</span></span>
+        </h2>
+        <p class="text-slate-600 dark:text-slate-400 text-sm mt-2 max-w-xl" data-bn>
+          ঢাকা ও ঢাকার বাইরে সিনিয়র অধ্যাপক ও বিশেষজ্ঞদের সাথে সরাসরি চেম্বার বা ভিডিও কনসালটেশন বুক করুন।
+        </p>
+        <p class="text-slate-600 dark:text-slate-400 text-sm mt-2 max-w-xl font-en" data-en>
+          Schedule verified chamber visits or instant telemedicine video consultations with senior professors.
+        </p>
+      </div>
+
+      <button onclick="openModal('bookModal')" class="mt-4 md:mt-0 inline-flex items-center gap-2 text-sm font-bold text-teal-600 dark:text-teal-400 hover:text-teal-700 transition-colors">
+        <span data-bn>সকল ডাক্তার দেখুন</span>
+        <span data-en>View All Doctors</span>
+        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Doctor Cards Grid with Real Professional Photos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <!-- Doctor 1 -->
+      <div class="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="relative h-56 w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+            <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80" alt="Dr. Rafia Sultana" class="w-full h-full object-cover object-top" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+              <span>BMDC Verified</span>
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-950/85 px-2 py-0.5 rounded-full flex items-center gap-1 text-xs font-bold text-white font-en">
+              <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+              <span>4.9</span>
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 text-white">
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5" data-bn>মেডিসিন বিশেষজ্ঞ</span>
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5 font-en" data-en>Medicine Specialist</span>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate" data-bn>ডা. রাফিয়া সুলতানা</h3>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate font-en" data-en>Dr. Rafia Sultana</h3>
+            </div>
+          </div>
+          <div class="space-y-1.5 mb-4 text-xs text-slate-500 dark:text-slate-400">
+            <div class="font-medium text-slate-700 dark:text-slate-300">FCPS (Medicine), MBBS · ঢাকা</div>
+            <div class="font-en text-[11px] text-teal-600 dark:text-teal-400 font-semibold">BMDC #DH-54821</div>
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span data-bn>পরামর্শ ফি</span><span data-en>Fee</span>
+              <span class="text-sm font-black text-teal-600 dark:text-teal-400 font-en">৳800</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="openModal('bookModal')" class="w-full py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+          <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+          <span data-bn>অ্যাপয়েন্টমেন্ট বুক</span>
+          <span data-en>Book Appointment</span>
+        </button>
+      </div>
+
+      <!-- Doctor 2 -->
+      <div class="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="relative h-56 w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+            <img src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80" alt="Prof. Dr. Anwar Hossain" class="w-full h-full object-cover object-top" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+              <span>BMDC Verified</span>
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-950/85 px-2 py-0.5 rounded-full flex items-center gap-1 text-xs font-bold text-white font-en">
+              <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+              <span>4.9</span>
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 text-white">
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5" data-bn>হৃদরোগ বিশেষজ্ঞ</span>
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5 font-en" data-en>Cardiologist</span>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate" data-bn>অধ্যাপক ডা. আনোয়ার হোসেন</h3>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate font-en" data-en>Prof. Dr. Anwar Hossain</h3>
+            </div>
+          </div>
+          <div class="space-y-1.5 mb-4 text-xs text-slate-500 dark:text-slate-400">
+            <div class="font-medium text-slate-700 dark:text-slate-300">MD (Cardiology), MBBS · ঢাকা</div>
+            <div class="font-en text-[11px] text-teal-600 dark:text-teal-400 font-semibold">BMDC #CH-29034</div>
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span data-bn>পরামর্শ ফি</span><span data-en>Fee</span>
+              <span class="text-sm font-black text-teal-600 dark:text-teal-400 font-en">৳1200</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="openModal('bookModal')" class="w-full py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+          <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+          <span data-bn>অ্যাপয়েন্টমেন্ট বুক</span>
+          <span data-en>Book Appointment</span>
+        </button>
+      </div>
+
+      <!-- Doctor 3 -->
+      <div class="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="relative h-56 w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+            <img src="https://images.unsplash.com/photo-1594824813633-890a84f35959?auto=format&fit=crop&w=600&q=80" alt="Dr. Nafisa Karim" class="w-full h-full object-cover object-top" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+              <span>BMDC Verified</span>
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-950/85 px-2 py-0.5 rounded-full flex items-center gap-1 text-xs font-bold text-white font-en">
+              <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+              <span>4.8</span>
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 text-white">
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5" data-bn>গাইনি ও প্রসূতি বিশেষজ্ঞ</span>
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5 font-en" data-en>Gynecologist</span>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate" data-bn>ডা. নাফিসা করিম</h3>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate font-en" data-en>Dr. Nafisa Karim</h3>
+            </div>
+          </div>
+          <div class="space-y-1.5 mb-4 text-xs text-slate-500 dark:text-slate-400">
+            <div class="font-medium text-slate-700 dark:text-slate-300">FCPS (Gynecology), MBBS · ঢাকা</div>
+            <div class="font-en text-[11px] text-teal-600 dark:text-teal-400 font-semibold">BMDC #DH-71156</div>
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span data-bn>পরামর্শ ফি</span><span data-en>Fee</span>
+              <span class="text-sm font-black text-teal-600 dark:text-teal-400 font-en">৳1000</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="openModal('bookModal')" class="w-full py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+          <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+          <span data-bn>অ্যাপয়েন্টমেন্ট বুক</span>
+          <span data-en>Book Appointment</span>
+        </button>
+      </div>
+
+      <!-- Doctor 4 -->
+      <div class="glass-card rounded-3xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="relative h-56 w-full overflow-hidden rounded-2xl bg-slate-100 dark:bg-slate-800 mb-4">
+            <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=600&q=80" alt="Dr. Towhid Ahmed" class="w-full h-full object-cover object-top" />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <div class="absolute top-3 left-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm text-xs font-bold text-slate-800 dark:text-slate-100 border border-slate-200 dark:border-slate-700">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal-600 dark:text-teal-400"></i>
+              <span>BMDC Verified</span>
+            </div>
+            <div class="absolute top-3 right-3 bg-slate-950/85 px-2 py-0.5 rounded-full flex items-center gap-1 text-xs font-bold text-white font-en">
+              <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+              <span>5.0</span>
+            </div>
+            <div class="absolute bottom-3 left-3 right-3 text-white">
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5" data-bn>নিউরোমেডিসিন বিশেষজ্ঞ</span>
+              <span class="text-[11px] uppercase font-bold tracking-wider text-teal-300 block mb-0.5 font-en" data-en>Neurologist</span>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate" data-bn>ডা. তাওহীদ আহমেদ</h3>
+              <h3 class="text-base font-black leading-snug drop-shadow-sm truncate font-en" data-en>Dr. Towhid Ahmed</h3>
+            </div>
+          </div>
+          <div class="space-y-1.5 mb-4 text-xs text-slate-500 dark:text-slate-400">
+            <div class="font-medium text-slate-700 dark:text-slate-300">MD (Neurology), MBBS · ঢাকা</div>
+            <div class="font-en text-[11px] text-teal-600 dark:text-teal-400 font-semibold">BMDC #SY-38814</div>
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span data-bn>পরামর্শ ফি</span><span data-en>Fee</span>
+              <span class="text-sm font-black text-teal-600 dark:text-teal-400 font-en">৳1500</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="openModal('bookModal')" class="w-full py-2.5 px-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors">
+          <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+          <span data-bn>অ্যাপয়েন্টমেন্ট বুক</span>
+          <span data-en>Book Appointment</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 6. DIAGNOSTIC LAB PACKAGES -->
+<!-- ============================================================ -->
+<section id="lab" class="py-16 bg-white dark:bg-slate-900/50 border-y border-slate-200/80 dark:border-slate-800/80 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 text-xs font-bold border border-sky-200 dark:border-sky-700/50 mb-3">
+        <i data-lucide="flask-conical" class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400"></i>
+        <span data-bn>ডায়াগনস্টিক ও প্যাথলজি প্যাকেজ</span>
+        <span data-en>Diagnostic & Pathology Packages</span>
+      </span>
+      <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
+        <span data-bn>বাসায় বসে <span class="gradient-text">ল্যাব টেস্ট</span> করান</span>
+        <span data-en>Certified <span class="gradient-text">Home Diagnostic</span> Tests</span>
+      </h2>
+      <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed" data-bn>
+        প্রশিক্ষিত ল্যাব টেকনিশিয়ান আপনার বাসায় গিয়ে নমুনা সংগ্রহ করবে। স্বয়ংক্রিয় সিকোয়েন্সিয়াল ল্যাব আইডি দিয়ে ট্র্যাকিং এবং অনলাইনে দ্রুততম সময়ে নির্ভুল রিপোর্ট।
+      </p>
+      <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed font-en" data-en>
+        Trained medical phlebotomists collect samples from your home. Track with sequential Lab ID and receive pathologist-verified PDF report online.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Test 1 -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300" data-bn>রুটিন চেকআপ</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 font-en" data-en>Routine</span>
+            <span class="text-xl font-black text-teal-600 dark:text-teal-400 font-en">৳350</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" data-bn>কমপ্লিট ব্লাড কাউন্ট (CBC)</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-en" data-en>Complete Blood Count (CBC)</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-4" data-bn>হিমোগ্লোবিন, ইএসআর, আরবিসি, ডব্লিউবিসি এবং প্লেটলেট কাউন্ট বিশ্লেষণ।</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-4 font-en" data-en>Hemoglobin, ESR, RBC, WBC and platelet count with automated analyzer.</p>
+          <div class="text-[11px] text-slate-500 space-y-1 mb-5">
+            <div class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-teal-500"></i><span data-bn>রিপোর্ট ডেলিভারি: ৪ ঘণ্টায়</span><span data-en>Delivery: 4 Hours</span></div>
+            <div class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal-500"></i><span data-bn>ফ্রি হোম স্যাম্পল কালেকশন</span><span data-en>Free Home Sample Collection</span></div>
+          </div>
+        </div>
+        <button onclick="showToast('ল্যাব টেস্ট বুকিং সম্পন্ন!', 'Lab sample request booked!')" class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-sm transition-colors">
+          <span data-bn>বুক করুন</span>
+          <span data-en>Book Test</span>
+        </button>
+      </div>
+
+      <!-- Test 2 -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col justify-between border-teal-300/80 dark:border-teal-700/60 shadow-lg">
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200" data-bn>জনপ্রিয় প্যাকেজ</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 font-en" data-en>Popular</span>
+            <span class="text-xl font-black text-teal-600 dark:text-teal-400 font-en">৳1250</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" data-bn>ফুল বডি হেলথ স্ক্রিনিং</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-en" data-en>Full Body Health Screening</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-4" data-bn>সিবিসি, লিপিড প্রোফাইল, লিভার ফাংশন (SGPT), সিরাম ক্রিয়েটিনিন এবং ইউরিন আর/ই।</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-4 font-en" data-en>CBC, Lipid Profile, Liver Function (SGPT), Serum Creatinine and Urine R/E.</p>
+          <div class="text-[11px] text-slate-500 space-y-1 mb-5">
+            <div class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-teal-500"></i><span data-bn>রিপোর্ট ডেলিভারি: ৬ ঘণ্টায়</span><span data-en>Delivery: 6 Hours</span></div>
+            <div class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal-500"></i><span data-bn>ডাক্তারের রিপোর্ট রিভিউ সহ</span><span data-en>Includes Free Doctor Review</span></div>
+          </div>
+        </div>
+        <button onclick="showToast('ল্যাব টেস্ট বুকিং সম্পন্ন!', 'Full body package booked!')" class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-sm transition-colors">
+          <span data-bn>বুক করুন</span>
+          <span data-en>Book Test</span>
+        </button>
+      </div>
+
+      <!-- Test 3 -->
+      <div class="glass-card rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300" data-bn>ডায়াবেটিস কেয়ার</span>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-en" data-en>Diabetes</span>
+            <span class="text-xl font-black text-teal-600 dark:text-teal-400 font-en">৳850</span>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2" data-bn>ডায়াবেটিস প্যানেল (HbA1c + Fasting)</h3>
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 font-en" data-en>Diabetes Comprehensive Panel</h3>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-4" data-bn>৩ মাসের গড় রক্তের শর্করা (HbA1c) এবং ফাস্টিং প্লাজমা গ্লুকোজ টেস্ট।</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400 mb-4 font-en" data-en>3-month average blood glucose (HbA1c) and fasting plasma glucose test.</p>
+          <div class="text-[11px] text-slate-500 space-y-1 mb-5">
+            <div class="flex items-center gap-1.5"><i data-lucide="clock" class="w-3.5 h-3.5 text-teal-500"></i><span data-bn>রিপোর্ট ডেলিভারি: ৪ ঘণ্টায়</span><span data-en>Delivery: 4 Hours</span></div>
+            <div class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-teal-500"></i><span data-bn>ফ্রি হোম স্যাম্পল কালেকশন</span><span data-en>Free Home Sample Collection</span></div>
+          </div>
+        </div>
+        <button onclick="showToast('ল্যাব টেস্ট বুকিং সম্পন্ন!', 'Diabetes panel booked!')" class="w-full py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs shadow-sm transition-colors">
+          <span data-bn>বুক করুন</span>
+          <span data-en>Book Test</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 7. PATIENT MEDICAL VAULT (PID) SECTION -->
+<!-- ============================================================ -->
+<section id="vault" class="py-16 sm:py-20 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <div class="text-center max-w-3xl mx-auto mb-12">
+      <span class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-700/50 mb-3">
+        <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
+        <span data-bn>স্মার্ট মেডিকেল ভল্ট (PID)</span>
+        <span data-en>Patient Medical Vault (PID)</span>
+      </span>
+      <h2 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-3">
+        <span data-bn>আপনার সম্পূর্ণ <span class="gradient-text">মেডিকেল রেকর্ড</span> এক জায়গায়</span>
+        <span data-en>Your Complete <span class="gradient-text">Medical Records</span> in One Place</span>
+      </h2>
+      <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed" data-bn>
+        আজীবন সুরক্ষিত ডিজিটাল মেডিকেল প্রোফাইল — সব প্রেসক্রিপশন, ল্যাব টেস্ট ট্র্যাকিং ও ইতিহাস এক ক্লিকে ডাউনলোড করুন।
+      </p>
+      <p class="text-slate-600 dark:text-slate-400 text-sm sm:text-base leading-relaxed font-en" data-en>
+        Lifetime secure digital health profile — all doctor prescriptions, live lab tracking, and medical history in one click.
+      </p>
+    </div>
+
+    <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+      <!-- Patient PID Card -->
+      <div class="lg:col-span-2 glass-card rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-start gap-4 mb-5">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-sky-600 flex items-center justify-center text-white text-2xl font-black shadow-md flex-shrink-0">
+              JD
+            </div>
+            <div>
+              <h4 class="font-bold text-base text-slate-900 dark:text-white" data-bn>জন ডো (John Doe)</h4>
+              <h4 class="font-bold text-base text-slate-900 dark:text-white font-en" data-en>John Doe (Patient)</h4>
+              <p class="text-xs text-teal-600 dark:text-teal-400 font-mono font-bold">PID: P01</p>
+              <span class="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span data-bn>যাচাইকৃত প্রোফাইল</span>
+                <span data-en>Verified Profile</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="space-y-2.5 mb-6 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-4">
+            <div class="flex justify-between">
+              <span class="text-slate-500" data-bn>বয়স:</span>
+              <span class="text-slate-500" data-en>Age:</span>
+              <span class="font-bold font-en">32 Yrs</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500" data-bn>রক্তের গ্রুপ:</span>
+              <span class="text-slate-500" data-en>Blood Group:</span>
+              <span class="font-bold text-rose-600 font-en">B+ Positive</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500" data-bn>ফোন নম্বর:</span>
+              <span class="text-slate-500" data-en>Phone:</span>
+              <span class="font-bold font-en">+880 1811112233</span>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="showToast('প্রেসক্রিপশন ডাউনলোড শুরু হচ্ছে...', 'Prescription PDF downloading...')" class="w-full flex items-center justify-center gap-2 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span data-bn>প্রেসক্রিপশন ডাউনলোড</span>
+          <span data-en>Download Prescription</span>
+        </button>
+      </div>
+
+      <!-- Live Lab Tracking Progress Timeline Card -->
+      <div class="lg:col-span-3 glass-card rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider" data-bn>সর্বশেষ ডায়াগনস্টিক রিপোর্ট</span>
+              <span class="text-[11px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider font-en" data-en>Latest Diagnostic Report</span>
+              <h4 class="font-bold text-slate-900 dark:text-white text-base">
+                CBC + Lipid Profile Panel
+              </h4>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-teal-50 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-700/50">
+              LAB-240109
+            </span>
+          </div>
+
+          <div class="space-y-4 my-6">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</div>
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white" data-bn>নমুনা সংগ্রহ সম্পন্ন (Sample Collected)</div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white font-en" data-en>Sample Collected at Home</div>
+                <div class="text-[11px] text-slate-500">Dhanmondi Unit · 08:30 AM</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</div>
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white" data-bn>ল্যাব প্রসেসিং ও বিশ্লেষণ সম্পন্ন</div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white font-en" data-en>Processing in Central Pathology Lab</div>
+                <div class="text-[11px] text-slate-500">Automated Hematology Analyzer</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold shrink-0">✓</div>
+              <div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white" data-bn>কনসালটেন্ট প্যাথলজিস্ট কর্তৃক অনুমোদিত</div>
+                <div class="text-xs font-bold text-slate-900 dark:text-white font-en" data-en>Doctor Verified & Certified</div>
+                <div class="text-[11px] text-slate-500">Dr. Rafiqul Islam (Chief Pathologist)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <span data-bn>রিপোর্ট অনলাইনে প্রস্তুত</span>
+            <span data-en>PDF Report Ready</span>
+          </span>
+
+          <button onclick="showToast('ল্যাব রিপোর্ট ডাউনলোড শুরু হচ্ছে...', 'Lab report PDF downloading...')" class="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 transition-colors">
+            <i data-lucide="download" class="w-3.5 h-3.5 text-teal-400"></i>
+            <span data-bn>ডাউনলোড PDF</span>
+            <span data-en>Download PDF</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 8. EMERGENCY CTA BANNER -->
+<!-- ============================================================ -->
+<section class="py-14 bg-gradient-to-r from-teal-600 to-sky-600 text-white relative overflow-hidden rounded-3xl mx-4 sm:mx-6 lg:mx-8 mb-16 shadow-xl">
+  <div class="max-w-5xl mx-auto px-6 text-center space-y-5">
+    <div class="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-bold">
+      <i data-lucide="siren" class="w-4 h-4 text-white animate-pulse"></i>
+      <span data-bn>জরুরি চিকিৎসা হেল্পলাইন</span>
+      <span data-en>National Emergency Response</span>
+    </div>
+
+    <h3 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+      <span data-bn>যেকোনো চিকিৎসা জরুরি প্রয়োজনে আমরা প্রস্তুত ২৪/৭</span>
+      <span data-en>Immediate Medical Assistance When Every Second Counts</span>
+    </h3>
+
+    <p class="text-teal-100 text-xs sm:text-sm max-w-xl mx-auto" data-bn>
+      জাতীয় জরুরি হটলাইন ৯৯৯ অথবা আমাদের জরুরি অ্যাম্বুলেন্স কমান্ড সেন্টারে সরাসরি যোগাযোগ করুন।
+    </p>
+    <p class="text-teal-100 text-xs sm:text-sm max-w-xl mx-auto font-en" data-en>
+      Call national hotline 999 or connect directly with our rapid ambulance command center.
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+      <a href="tel:+8801700000000" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-white text-teal-700 hover:bg-teal-50 font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all font-en">
+        <i data-lucide="phone-call" class="w-4 h-4 text-teal-600"></i>
+        <span>+880 1700-000000</span>
+      </a>
+
+      <button onclick="openModal('ambulanceModal')" class="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all">
+        <i data-lucide="siren" class="w-4 h-4"></i>
+        <span data-bn>অ্যাম্বুলেন্স রিকোয়েস্ট</span>
+        <span data-en>Request Ambulance</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 9. FOOTER -->
+<!-- ============================================================ -->
+<footer class="bg-slate-900 dark:bg-[#050811] text-slate-400 pt-16 pb-10 border-t border-slate-800 transition-colors">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+      
+      <!-- Brand Info -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-500 to-sky-600 flex items-center justify-center text-white shadow-md">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              <path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h4.28" />
+            </svg>
+          </div>
+          <div>
+            <span class="text-xl font-black text-white tracking-tight font-en">Shastho<span class="text-teal-400">Pulse</span></span>
+            <p class="text-[10px] text-teal-400 font-bn">স্বাস্থ্য পালস বাংলাদেশ</p>
+          </div>
+        </div>
+        <p class="text-xs leading-relaxed text-slate-400" data-bn>
+          আপনার নির্ভরযোগ্য স্মার্ট ডিজিটাল স্বাস্থ্যসেবা পার্টনার: বিশেষজ্ঞ ডাক্তার পরামর্শ, অনলাইন প্রেসক্রিপশন ফার্মেসি, ডায়াগনস্টিক ল্যাব টেস্ট এবং ২৪/৭ জাতীয় জরুরি সহায়তা।
+        </p>
+        <p class="text-xs leading-relaxed text-slate-400 font-en" data-en>
+          Your comprehensive digital healthcare partner: specialist consultations, online authentic pharmacy, diagnostic lab packages, and 24/7 national emergency care.
+        </p>
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-4" data-bn>স্বাস্থ্য ও রোগী সেবা</h4>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-4 font-en" data-en>Patient Services</h4>
+        <ul class="space-y-2.5 text-xs">
+          <li><a href="#doctors" class="hover:text-teal-400 transition-colors" data-bn>BMDC বিশেষজ্ঞ ডাক্তারগণ</a><a href="#doctors" class="hover:text-teal-400 transition-colors font-en" data-en>BMDC Specialist Doctors</a></li>
+          <li><a href="#lab" class="hover:text-teal-400 transition-colors" data-bn>ডায়াগনস্টিক ল্যাব প্যাকেজ</a><a href="#lab" class="hover:text-teal-400 transition-colors font-en" data-en>Diagnostic Lab Packages</a></li>
+          <li><a href="#services" class="hover:text-teal-400 transition-colors" data-bn>অনলাইন ফার্মেসি এক্সপ্রেস</a><a href="#services" class="hover:text-teal-400 transition-colors font-en" data-en>Online Pharmacy Store</a></li>
+          <li><a href="#vault" class="hover:text-teal-400 transition-colors" data-bn>ডিজিটাল মেডিকেল ভল্ট (PID)</a><a href="#vault" class="hover:text-teal-400 transition-colors font-en" data-en>Digital Medical Vault (PID)</a></li>
+        </ul>
+      </div>
+
+      <!-- Hospital Branches -->
+      <div>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-4" data-bn>হাসপাতাল নেটওয়ার্ক</h4>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-4 font-en" data-en>Hospital Branches</h4>
+        <ul class="space-y-2.5 text-xs text-slate-400">
+          <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-teal-400"></i><span>ধানমন্ডি ব্রাঞ্চ (Dhanmondi, Dhaka)</span></li>
+          <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-teal-400"></i><span>উত্তরা মেডিকেল সেন্টার (Uttara, Dhaka)</span></li>
+          <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-teal-400"></i><span>মিরপুর ডায়াগনস্টিক হাব (Mirpur, Dhaka)</span></li>
+          <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-3.5 h-3.5 text-teal-400"></i><span>জিইসি সার্কেল ব্রাঞ্চ (Chattogram)</span></li>
+        </ul>
+      </div>
+
+      <!-- Compliance & Hotline -->
+      <div class="space-y-3">
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-2" data-bn>যোগাযোগ ও অনুমোদন</h4>
+        <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-2 font-en" data-en>Contact & Compliance</h4>
+        <p class="text-xs text-slate-400 flex items-center gap-2">
+          <i data-lucide="phone" class="w-4 h-4 text-teal-400 shrink-0"></i>
+          <span class="font-en">+880 1700-000000 / 999</span>
+        </p>
+        <p class="text-xs text-slate-400 flex items-center gap-2">
+          <i data-lucide="mail" class="w-4 h-4 text-teal-400 shrink-0"></i>
+          <span class="font-en">support@shasthopulse.com.bd</span>
+        </p>
+        <div class="pt-2 border-t border-slate-800 text-[11px] text-teal-400 flex items-center gap-1.5">
+          <i data-lucide="shield" class="w-3.5 h-3.5 text-teal-400 shrink-0"></i>
+          <span data-bn>স্বাস্থ্য ও পরিবার কল্যাণ মন্ত্রণালয় অনুমোদিত</span>
+          <span data-en>Ministry of Health Approved</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="border-t border-slate-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+      <p>© 2026 ShasthoPulse (স্বাস্থ্য পালস). <span data-bn>সর্বস্বত্ব সংরক্ষিত।</span><span data-en>All rights reserved.</span></p>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-[11px] text-slate-500" data-bn>পেমেন্ট পদ্ধতি:</span>
+        <span class="text-[11px] text-slate-500 font-en" data-en>Payment:</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-pink-400 border border-slate-700 text-[11px] font-bold">bKash</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-orange-400 border border-slate-700 text-[11px] font-bold">Nagad</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-purple-400 border border-slate-700 text-[11px] font-bold">Rocket</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-blue-400 border border-slate-700 text-[11px] font-bold font-en">VISA / MC</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-slate-700 text-[11px] font-bold" data-bn>ক্যাশ</span>
+        <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-slate-700 text-[11px] font-bold font-en" data-en>Cash</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ============================================================ -->
+<!-- 10. BOOK APPOINTMENT MODAL -->
+<!-- ============================================================ -->
+<div id="bookModal" class="modal-overlay" onclick="closeModalOutside(event,'bookModal')">
+  <div class="modal-box glass rounded-3xl p-6 w-full max-w-md mx-4 shadow-2xl">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="font-bold text-lg text-slate-900 dark:text-white" data-bn>অ্যাপয়েন্টমেন্ট বুক করুন</h3>
+      <h3 class="font-bold text-lg text-slate-900 dark:text-white font-en" data-en>Book Doctor Appointment</h3>
+      <button onclick="closeModal('bookModal')" class="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>রোগীর পুরো নাম *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Patient Full Name *</label>
+        <input id="inputPatientName" type="text" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>মোবাইল নম্বর (এসএমএস কনফার্মেশনের জন্য) *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Mobile Number (For SMS Confirmation) *</label>
+        <input id="inputPatientPhone" type="tel" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-en">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>ডাক্তার নির্বাচন করুন *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Select Doctor *</label>
+        <select id="modalDoctorSelect" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
+          <!-- Dynamically populated options -->
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>সময় নির্বাচন করুন *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Select Time Slot *</label>
+        <select class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 font-en cursor-pointer">
+          <option>05:00 PM</option>
+          <option>06:00 PM</option>
+          <option>07:00 PM</option>
+          <option>08:00 PM</option>
+        </select>
+      </div>
+      <button onclick="confirmBooking()" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-md shadow-teal-600/20">
+        <span data-bn>বুকিং নিশ্চিত করুন</span>
+        <span data-en>Confirm Booking</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 11. EMERGENCY AMBULANCE MODAL -->
+<!-- ============================================================ -->
+<div id="ambulanceModal" class="modal-overlay" onclick="closeModalOutside(event,'ambulanceModal')">
+  <div class="modal-box glass rounded-3xl p-6 w-full max-w-md mx-4 shadow-2xl">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2">
+        <i data-lucide="siren" class="w-5 h-5 text-rose-500 animate-pulse"></i>
+        <h3 class="font-bold text-lg text-slate-900 dark:text-white" data-bn>জরুরি অ্যাম্বুলেন্স তলব</h3>
+        <h3 class="font-bold text-lg text-slate-900 dark:text-white font-en" data-en>Emergency Ambulance Dispatch</h3>
+      </div>
+      <button onclick="closeModal('ambulanceModal')" class="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>পিকআপ লোকেশন / সম্পূর্ণ ঠিকানা *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Pickup Address *</label>
+        <textarea id="inputPickupAddress" rows="2" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500"></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>জরুরি যোগাযোগ নম্বর *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Emergency Phone Number *</label>
+        <input id="inputEmergencyPhone" type="tel" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 font-en">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <a href="tel:+8801700000000" class="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs sm:text-sm transition-colors text-center flex items-center justify-center gap-2">
+          <i data-lucide="phone-call" class="w-4 h-4"></i>
+          <span data-bn>এখনই কল দিন</span>
+          <span data-en>Call Helpline</span>
+        </a>
+        <button onclick="confirmAmbulance()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-xs sm:text-sm transition-colors">
+          <span data-bn>অনলাইন রিকোয়েস্ট</span>
+          <span data-en>Request Online</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 11.B LOGIN MODAL (1-CLICK FAST DEMO LOGINS FOR ALL 5 ROLES) -->
+<!-- ============================================================ -->
+<div id="loginModal" class="modal-overlay" onclick="closeModalOutside(event,'loginModal')">
+  <div class="modal-box glass rounded-3xl p-6 sm:p-7 w-full max-w-lg mx-4 shadow-2xl border border-slate-200/80 dark:border-slate-800">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white" data-bn>স্বাস্থ্যপালস সিকিউর লগইন</h3>
+          <h3 class="font-bold text-base sm:text-lg text-slate-900 dark:text-white font-en" data-en>ShasthoPulse Secure Login</h3>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400" data-bn>আপনার রোল অনুযায়ী দ্রুত লগইন করুন</p>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 font-en" data-en>Fast 1-click login by portal role</p>
+        </div>
+      </div>
+      <button onclick="closeModal('loginModal')" class="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+      </button>
+    </div>
+
+    <!-- Quick Role Autofill Pills -->
+    <div class="mb-4">
+      <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider" data-bn>১-ক্লিক দ্রুত টেস্ট লগইন:</div>
+      <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider font-en" data-en>1-Click Quick Demo Login:</div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <button type="button" onclick="autofillLogin('patient')" class="px-2.5 py-2 rounded-xl border border-teal-500/30 bg-teal-500/10 hover:bg-teal-500/20 text-teal-700 dark:text-teal-300 text-left transition-all">
+          <div class="text-xs font-bold">👤 রোগী (Patient)</div>
+          <div class="text-[10px] opacity-75">PID: P01</div>
+        </button>
+        <button type="button" onclick="autofillLogin('doctor')" class="px-2.5 py-2 rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 text-left transition-all">
+          <div class="text-xs font-bold">🩺 ডাক্তার (Doctor)</div>
+          <div class="text-[10px] opacity-75">ID: D101</div>
+        </button>
+        <button type="button" onclick="autofillLogin('lab')" class="px-2.5 py-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-left transition-all">
+          <div class="text-xs font-bold">🔬 ল্যাব (Lab)</div>
+          <div class="text-[10px] opacity-75">ID: L101</div>
+        </button>
+        <button type="button" onclick="autofillLogin('accounts')" class="px-2.5 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-left transition-all">
+          <div class="text-xs font-bold">💳 অ্যাকাউন্টস</div>
+          <div class="text-[10px] opacity-75">ID: A101</div>
+        </button>
+        <button type="button" onclick="autofillLogin('admin')" class="px-2.5 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 text-left col-span-2 sm:col-span-1 transition-all">
+          <div class="text-xs font-bold">🛡️ অ্যাডমিন</div>
+          <div class="text-[10px] opacity-75">admin@medicare.com</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Role Indicator -->
+    <div id="loginRoleBadge" class="hidden items-center justify-between px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-xs mb-3 text-teal-800 dark:text-teal-300 font-medium">
+      <span>নির্বাচিত রোল: <b id="loginActiveRoleName">Patient P01</b></span>
+      <span class="text-[10px] bg-teal-200 dark:bg-teal-800 px-1.5 py-0.5 rounded">অটোফিল্ড</span>
+    </div>
+
+    <!-- Login Form -->
+    <form onsubmit="handleStaticLogin(event)" class="space-y-3.5">
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>ইমেইল অথবা পেশেন্ট আইডি (PID) *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Email or Patient ID (PID) *</label>
+        <div class="relative">
+          <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <input id="loginIdentifier" type="text" required placeholder="e.g. P01 or doctor@medicare.com" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1" data-bn>পাসওয়ার্ড *</label>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1 font-en" data-en>Password *</label>
+        <div class="relative">
+          <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+          <input id="loginPassword" type="password" required placeholder="••••••••" class="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono">
+          <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+            <i data-lucide="eye" id="eyeIcon" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between text-xs pt-1">
+        <label class="flex items-center gap-2 cursor-pointer text-slate-600 dark:text-slate-400">
+          <input type="checkbox" checked class="rounded text-teal-600 focus:ring-teal-500">
+          <span data-bn>আমাকে মনে রাখুন</span>
+          <span data-en>Remember me</span>
+        </label>
+        <a href="#" class="text-teal-600 dark:text-teal-400 hover:underline font-medium" data-bn>পাসওয়ার্ড ভুলে গেছেন?</a>
+        <a href="#" class="text-teal-600 dark:text-teal-400 hover:underline font-medium font-en" data-en>Forgot password?</a>
+      </div>
+
+      <div class="pt-2 space-y-2">
+        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-teal-600/25 transition-all">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span data-bn>লগইন করুন</span>
+          <span data-en>Sign In to Account</span>
+        </button>
+
+        <a href="/#login" class="w-full py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition-colors">
+          <i data-lucide="external-link" class="w-3.5 h-3.5 text-teal-500"></i>
+          <span data-bn>ফুল রিয়্যাক্ট অ্যাপ্লিকেশনে লগইন পেজ খুলুন</span>
+          <span data-en>Open Full React App Login Page</span>
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 12. TOAST NOTIFICATION -->
+<!-- ============================================================ -->
+<div id="toast" class="fixed bottom-6 right-6 z-[1000] transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+  <div class="flex items-center gap-3 glass rounded-2xl px-5 py-4 shadow-2xl border border-teal-200 dark:border-teal-700/60 min-w-64">
+    <div class="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center shrink-0 text-white font-bold text-sm">
+      ✓
+    </div>
+    <div>
+      <div class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white" id="toastTitle">সফল!</div>
+      <div class="text-[11px] text-slate-500 dark:text-slate-400" id="toastMsg">অপারেশন সম্পন্ন হয়েছে।</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 13. JAVASCRIPT: STRICT DYNAMIC LANGUAGE & FLAWLESS THEME -->
+<!-- ============================================================ -->
+<script>
+// Initialize Lucide icons
+lucide.createIcons();
+
+// Dropdown data definitions for 100% clean single-language rendering
+const dropdownData = {
+  specialties: {
+    bn: [
+      { val: '', text: 'বিশেষজ্ঞ বিভাগ বেছে নিন' },
+      { val: 'Medicine', text: 'মেডিসিন ও ইন্টারনাল কেয়ার' },
+      { val: 'Cardiology', text: 'হৃদরোগ বিশেষজ্ঞ (Cardiology)' },
+      { val: 'Pediatrics', text: 'শিশু বিশেষজ্ঞ (Pediatrics)' },
+      { val: 'Gynecology', text: 'গাইনি ও প্রসূতি রোগ (Gynecology)' },
+      { val: 'Neurology', text: 'স্নায়ুরোগ ও নিউরোমেডিসিন' }
+    ],
+    en: [
+      { val: '', text: 'Select Specialty' },
+      { val: 'Medicine', text: 'Internal Medicine' },
+      { val: 'Cardiology', text: 'Cardiology' },
+      { val: 'Pediatrics', text: 'Pediatrics (Child Care)' },
+      { val: 'Gynecology', text: 'Gynecology & Obstetrics' },
+      { val: 'Neurology', text: 'Neurology & Medicine' }
+    ]
+  },
+  locations: {
+    bn: [
+      { val: '', text: 'লোকেশন / জেলা বেছে নিন' },
+      { val: 'Dhaka', text: 'ঢাকা মেট্রোপলিটন (Dhaka)' },
+      { val: 'Chattogram', text: 'চট্টগ্রাম (Chattogram)' },
+      { val: 'Sylhet', text: 'সিলেট (Sylhet)' },
+      { val: 'Rajshahi', text: 'রাজশাহী (Rajshahi)' },
+      { val: 'Khulna', text: 'খুলনা (Khulna)' }
+    ],
+    en: [
+      { val: '', text: 'Select City / Location' },
+      { val: 'Dhaka', text: 'Dhaka Metropolitan' },
+      { val: 'Chattogram', text: 'Chattogram' },
+      { val: 'Sylhet', text: 'Sylhet' },
+      { val: 'Rajshahi', text: 'Rajshahi' },
+      { val: 'Khulna', text: 'Khulna' }
+    ]
+  },
+  modalDoctors: {
+    bn: [
+      { val: '1', text: 'ডা. রাফিয়া সুলতানা — মেডিসিন (ফি: ৳৮০০)' },
+      { val: '2', text: 'অধ্যাপক ডা. আনোয়ার হোসেন — হৃদরোগ (ফি: ৳১২০০)' },
+      { val: '3', text: 'ডা. নাফিসা করিম — স্ত্রীরোগ (ফি: ৳১০০০)' },
+      { val: '4', text: 'ডা. তাওহীদ আহমেদ — নিউরো (ফি: ৳১৫০০)' }
+    ],
+    en: [
+      { val: '1', text: 'Dr. Rafia Sultana — Medicine (Fee: ৳800)' },
+      { val: '2', text: 'Prof. Dr. Anwar Hossain — Cardiology (Fee: ৳1200)' },
+      { val: '3', text: 'Dr. Nafisa Karim — Gynecology (Fee: ৳1000)' },
+      { val: '4', text: 'Dr. Towhid Ahmed — Neurology (Fee: ৳1500)' }
+    ]
+  },
+  placeholders: {
+    bn: {
+      patientName: 'রোগীর পুরো নাম লিখুন',
+      patientPhone: '০১৮XXXXXXXX (১১ ডিজিটের নম্বর)',
+      pickupAddress: 'বাড়ি নম্বর, রোড, এলাকা (যেমন: বাসা ১২, রোড ৫, ধানমন্ডি)',
+      emergencyPhone: '০১৭XXXXXXXX'
+    },
+    en: {
+      patientName: 'Enter patient full name',
+      patientPhone: '+880 1XXXXXXXXX',
+      pickupAddress: 'House no, Road, Area (e.g. House 12, Road 5, Dhanmondi)',
+      emergencyPhone: '+880 1XXXXXXXXX'
+    }
+  }
+};
+
+let currentLang = 'bn';
+
+function populateDropdowns(lang) {
+  const specSelect = document.getElementById('heroSpecialtySelect');
+  if (specSelect) {
+    specSelect.innerHTML = dropdownData.specialties[lang].map(o => `<option value="${o.val}">${o.text}</option>`).join('');
+  }
+  const locSelect = document.getElementById('heroLocationSelect');
+  if (locSelect) {
+    locSelect.innerHTML = dropdownData.locations[lang].map(o => `<option value="${o.val}">${o.text}</option>`).join('');
+  }
+  const docSelect = document.getElementById('modalDoctorSelect');
+  if (docSelect) {
+    docSelect.innerHTML = dropdownData.modalDoctors[lang].map(o => `<option value="${o.val}">${o.text}</option>`).join('');
+  }
+  
+  // Update input placeholders
+  const pName = document.getElementById('inputPatientName');
+  if (pName) pName.placeholder = dropdownData.placeholders[lang].patientName;
+  const pPhone = document.getElementById('inputPatientPhone');
+  if (pPhone) pPhone.placeholder = dropdownData.placeholders[lang].patientPhone;
+  const pAddr = document.getElementById('inputPickupAddress');
+  if (pAddr) pAddr.placeholder = dropdownData.placeholders[lang].pickupAddress;
+  const ePhone = document.getElementById('inputEmergencyPhone');
+  if (ePhone) ePhone.placeholder = dropdownData.placeholders[lang].emergencyPhone;
+}
+
+function applyLanguage(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+  document.getElementById('langLabel').textContent = lang === 'bn' ? 'বাংলা' : 'EN';
+  localStorage.setItem('shasthopulse-lang', lang);
+  populateDropdowns(lang);
+}
+
+function toggleLang() {
+  const nextLang = currentLang === 'bn' ? 'en' : 'bn';
+  applyLanguage(nextLang);
+}
+
+// ---- THEME SWITCHER (ZERO OVERRIDE BUG) ----
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
+  if (isDark) {
+    html.classList.remove('dark');
+    html.classList.add('light');
+    localStorage.setItem('shasthopulse-theme', 'light');
+  } else {
+    html.classList.remove('light');
+    html.classList.add('dark');
+    localStorage.setItem('shasthopulse-theme', 'dark');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+// Initial Theme & Lang Boot
+(function() {
+  const savedTheme = localStorage.getItem('shasthopulse-theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('light');
+  } else {
+    document.documentElement.classList.add('light');
+    document.documentElement.classList.remove('dark');
+  }
+
+  const savedLang = localStorage.getItem('shasthopulse-lang') || 'bn';
+  applyLanguage(savedLang);
+})();
+
+// ---- MODAL CONTROLS ----
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (window.lucide) lucide.createIcons();
+  }
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+function closeModalOutside(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+
+// 1-Click Fast Demo Login Autofill
+function autofillLogin(role) {
+  const creds = {
+    patient: { id: 'P01', pass: 'patient123', label: 'Patient (PID: P01)' },
+    doctor: { id: 'D101', pass: 'password123', label: 'Doctor (Dr. Rafiqul - D101)' },
+    lab: { id: 'L101', pass: 'password123', label: 'Lab Technician (L101)' },
+    accounts: { id: 'A101', pass: 'password123', label: 'Accountant (A101)' },
+    admin: { id: 'admin@medicare.com', pass: 'admin123', label: 'Admin (System)' }
+  };
+  const c = creds[role];
+  if (!c) return;
+
+  const inputId = document.getElementById('loginIdentifier');
+  const inputPass = document.getElementById('loginPassword');
+  const badge = document.getElementById('loginRoleBadge');
+  const badgeName = document.getElementById('loginActiveRoleName');
+
+  if (inputId) inputId.value = c.id;
+  if (inputPass) inputPass.value = c.pass;
+  if (badge && badgeName) {
+    badgeName.textContent = c.label;
+    badge.classList.remove('hidden');
+    badge.classList.add('flex');
+  }
+}
+
+function togglePasswordVisibility() {
+  const input = document.getElementById('loginPassword');
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function handleStaticLogin(e) {
+  e.preventDefault();
+  const identifier = document.getElementById('loginIdentifier').value;
+  const password = document.getElementById('loginPassword').value;
+
+  // Attempt real API call via backend or redirect to React app with session
+  fetch('/backend/api/login.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ identifier, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success' && data.user) {
+      localStorage.setItem('medicare_user', JSON.stringify(data.user));
+      showToast(
+        currentLang === 'bn' ? 'লগইন সফল!' : 'Login Successful!',
+        (data.user.name || identifier) + ' হিসেবে সফলভাবে লগইন হয়েছে।'
+      );
+      setTimeout(() => {
+        const role = String(data.user.role || '').toLowerCase();
+        let targetHash = 'patient-dashboard';
+        if (role === 'doctor') targetHash = 'doctor-portal';
+        else if (role === 'lab_staff') targetHash = 'lab-portal';
+        else if (role === 'accountant') targetHash = 'accounts-portal';
+        else if (role === 'admin') targetHash = 'admin';
+        window.location.href = '/#' + targetHash;
+      }, 1000);
+    } else {
+      alert(data.message || 'ভুল ইউজার আইডি বা পাসওয়ার্ড!');
+    }
+  })
+  .catch(() => {
+    // If running in file:// or decoupled static mode, redirect to React app
+    window.location.href = '/#login';
+  });
+}
+
+function confirmBooking() {
+  closeModal('bookModal');
+  showToast(
+    currentLang === 'bn' ? 'অ্যাপয়েন্টমেন্ট সফলভাবে বুক হয়েছে!' : 'Appointment Successfully Booked!',
+    currentLang === 'bn' ? 'শীঘ্রই আপনার ফোনে এসএমএস কনফার্মেশন পাঠানো হবে।' : 'Confirmation SMS sent to your mobile.'
+  );
+}
+
+function confirmAmbulance() {
+  closeModal('ambulanceModal');
+  showToast(
+    currentLang === 'bn' ? 'অ্যাম্বুলেন্স ডিসপ্যাচ রিকোয়েস্ট সফল!' : 'Ambulance Dispatch Requested!',
+    currentLang === 'bn' ? '১৫ মিনিটের মধ্যে ড্রাইভার ও কন্ট্রোল রুম যোগাযোগ করবে।' : 'Control room will contact within 15 minutes.'
+  );
+}
+
+function showToast(title, msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent = msg;
+  toast.classList.remove('translate-y-20', 'opacity-0');
+  toast.classList.add('translate-y-0', 'opacity-100');
+  setTimeout(() => {
+    toast.classList.add('translate-y-20', 'opacity-0');
+    toast.classList.remove('translate-y-0', 'opacity-100');
+  }, 4000);
+}
+</script>
+</body>
+</html>
