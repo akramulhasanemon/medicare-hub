@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   sendRegistrationSMS, 
   sendRegistrationEmail, 
@@ -44,6 +45,7 @@ import {
 
 const Register = ({ setActivePage }) => {
   const { register } = useAuth();
+  const { isBn } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -127,13 +129,13 @@ const Register = ({ setActivePage }) => {
   const getRoleBadge = (role) => {
     switch (role) {
       case 'doctor':
-        return { label: 'Doctor Specialist Account', prefix: 'D10X', color: 'from-purple-600 to-indigo-600', text: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-200' };
+        return { label: isBn ? 'ডাক্তার বিশেষজ্ঞ অ্যাকাউন্ট' : 'Doctor Specialist Account', prefix: 'D10X', color: 'from-purple-600 to-indigo-600', text: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-950/40', border: 'border-purple-200 dark:border-purple-800' };
       case 'lab_staff':
-        return { label: 'Lab Employee / Technologist Account', prefix: 'L10X', color: 'from-blue-600 to-cyan-600', text: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' };
+        return { label: isBn ? 'ল্যাব টেকনোলজিস্ট অ্যাকাউন্ট' : 'Lab Technologist Account', prefix: 'L10X', color: 'from-sky-600 to-teal-600', text: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-50 dark:bg-sky-950/40', border: 'border-sky-200 dark:border-sky-800' };
       case 'accountant':
-        return { label: 'Accounts Section Account', prefix: 'A10X', color: 'from-emerald-600 to-teal-600', text: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' };
+        return { label: isBn ? 'অ্যাকাউন্টস সেকশন অ্যাকাউন্ট' : 'Accounts Section Account', prefix: 'A10X', color: 'from-emerald-600 to-teal-600', text: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/40', border: 'border-emerald-200 dark:border-emerald-800' };
       default:
-        return { label: 'Patient Medical Account', prefix: 'P0X', color: 'from-cyan-600 to-blue-600', text: 'text-cyan-700', bg: 'bg-cyan-50', border: 'border-cyan-200' };
+        return { label: isBn ? 'রোগী মেডিকেল অ্যাকাউন্ট (PID)' : 'Patient Medical Vault (PID)', prefix: 'P0X', color: 'from-teal-600 to-sky-600', text: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 dark:bg-teal-950/40', border: 'border-teal-200 dark:border-teal-800' };
     }
   };
 
@@ -146,23 +148,25 @@ const Register = ({ setActivePage }) => {
     const emailData = formatRegistrationEmail(registeredUser);
 
     return (
-      <div className="min-h-[85vh] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-slate-50">
-        <div className="max-w-2xl w-full bg-white p-6 sm:p-10 rounded-3xl border border-slate-200/80 shadow-2xl text-center space-y-6 animate-in fade-in zoom-in duration-300">
+      <div className="min-h-[92vh] flex items-center justify-center py-10 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-[#080C14] transition-colors">
+        <div className="max-w-2xl w-full bg-white/95 dark:bg-[#0F172A]/90 backdrop-blur-xl p-6 sm:p-10 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl text-center space-y-6">
           
           {/* Success Icon */}
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+          <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
             <CheckCircle2 className="w-10 h-10" />
           </div>
 
           <div>
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
-              {roleInfo.label} রেজিস্ট্রেশন সম্পন্ন
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 mb-2 font-bn">
+              {roleInfo.label} {isBn ? 'রেজিস্ট্রেশন সম্পন্ন' : 'Registration Completed'}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Registration Successful!
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-bn">
+              {isBn ? 'রেজিস্ট্রেশন সফল হয়েছে!' : 'Registration Successful!'}
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              আপনার একাউন্ট সফলভাবে তৈরি হয়েছে এবং স্বয়ংক্রিয়ভাবে ইমেইল ও মোবাইল নম্বরে কনফার্মেশন পাঠানো হয়েছে।
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-bn">
+              {isBn 
+                ? 'আপনার একাউন্ট সফলভাবে তৈরি হয়েছে এবং স্বয়ংক্রিয়ভাবে ইমেইল ও মোবাইল নম্বরে কনফার্মেশন পাঠানো হয়েছে।'
+                : 'Your account has been created. Instant credentials sent to your phone and email.'}
             </p>
           </div>
 
@@ -176,8 +180,8 @@ const Register = ({ setActivePage }) => {
 
           {/* ID Highlight Box */}
           <div className={`bg-gradient-to-br ${roleInfo.bg} border-2 ${roleInfo.border} p-6 rounded-2xl text-center relative shadow-inner`}>
-            <span className={`text-[11px] font-bold uppercase tracking-wider ${roleInfo.text} block mb-1`}>
-              Your Auto-Generated Permanent ID
+            <span className={`text-[11px] font-bold uppercase tracking-wider ${roleInfo.text} block mb-1 font-bn`}>
+              {isBn ? 'আপনার অটো-জেনারেটেড পার্মানেন্ট আইডি' : 'Your Auto-Generated Permanent ID'}
             </span>
             <div className="flex items-center justify-center gap-3">
               <span className={`text-4xl sm:text-5xl font-black ${roleInfo.text} font-mono tracking-wider`}>
@@ -187,25 +191,25 @@ const Register = ({ setActivePage }) => {
                 type="button"
                 onClick={handleCopyId}
                 title="Copy ID"
-                className="p-2.5 bg-white hover:bg-slate-100 rounded-xl border border-slate-200 text-slate-700 shadow-sm transition-all"
+                className="p-2.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-sm transition-all"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
             {copied && (
-              <span className="text-[10px] text-emerald-600 font-bold block mt-1">
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block mt-1">
                 ✓ Login ID copied to clipboard!
               </span>
             )}
-            <p className="text-[11px] text-slate-600 font-medium mt-3 bg-white/80 py-2 px-3 rounded-xl border border-slate-200">
-              💡 <strong>লগইন করার নিয়ম:</strong> পরবর্তীতে লগইন করার সময় আপনার আইডি (<strong className={`font-mono ${roleInfo.text}`}>{registeredUser.patient_id}</strong>) এবং পাসওয়ার্ড ব্যবহার করবেন।
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-3 bg-white/80 dark:bg-slate-900/80 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 font-bn">
+              💡 <strong>{isBn ? 'লগইন করার নিয়ম:' : 'How to sign in:'}</strong> {isBn ? 'পরবর্তীতে লগইন করার সময় আপনার আইডি' : 'Use your assigned ID'} (<strong className={`font-mono ${roleInfo.text}`}>{registeredUser.patient_id}</strong>) {isBn ? 'এবং পাসওয়ার্ড ব্যবহার করবেন।' : 'and password on the login screen.'}
             </p>
           </div>
 
           {/* DUAL NOTIFICATION STATUS: SMS & EMAIL DISPATCH CARDS */}
           <div className="space-y-3 text-left">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5 font-bn">
                 <Send className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Dispatched Notifications (প্রেরিত নোটিফিকেশন)</span>
               </h3>
@@ -574,26 +578,32 @@ const Register = ({ setActivePage }) => {
   }
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50">
-      <div className="max-w-xl w-full space-y-6 bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xl">
+    <div className="min-h-[92vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-[#080C14] transition-colors">
+      <div className="max-w-xl w-full space-y-6 bg-white/95 dark:bg-[#0F172A]/90 backdrop-blur-xl p-6 sm:p-10 rounded-3xl border border-slate-200/90 dark:border-slate-800 shadow-2xl">
         
-        {/* Header */}
+        {/* Header with Bespoke ShasthoPulse Logo */}
         <div className="text-center">
-          <div className="w-14 h-14 bg-gradient-to-tr from-cyan-600 to-blue-600 rounded-2xl flex items-center justify-center text-white mx-auto shadow-lg shadow-cyan-600/25">
-            <HeartPulse className="w-8 h-8" />
+          <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-teal-400 to-sky-400 flex items-center justify-center text-white mx-auto shadow-lg shadow-teal-500/30 mb-3">
+            <svg className="w-7 h-7" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M16 6C16 4.89543 16.8954 4 18 4H22C23.1046 4 24 4.89543 24 6V14H32C33.1046 14 34 14.8954 34 16V20C34 21.1046 33.1046 22 32 22H24V32C24 33.1046 23.1046 34 22 34H18C16.8954 34 16 33.1046 16 32V22H8C6.89543 22 6 21.1046 6 20V16C6 14.8954 6.89543 14 8 14H16V6Z" fill="white" fillOpacity="0.22" />
+              <path d="M5 20H13L16 11L21 28L25 15L28 22H35" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="28" cy="22" r="2.2" fill="#5EEAD4" />
+            </svg>
           </div>
-          <h2 className="mt-4 text-3xl font-extrabold text-slate-900 tracking-tight">
-            MediCare Portal Registration
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight font-bn">
+            {isBn ? 'স্বাস্থ্যপালস পোর্টাল রেজিস্ট্রেশন' : 'ShasthoPulse Portal Registration'}
           </h2>
-          <p className="mt-1 text-xs text-slate-500">
-            Create an account for Patient, Doctor (D101+), Lab Employee (L101+), or Accounts Section (A101+)
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 font-bn">
+            {isBn 
+              ? 'রোগী (PID), ডাক্তার (D101+), ল্যাব স্টাফ (L101+), অথবা অ্যাকাউন্টস সেকশন (A101+) অ্যাকাউন্ট তৈরি করুন' 
+              : 'Create an account for Patient (PID), Doctor, Lab Technologist, or Hospital Billing'}
           </p>
         </div>
 
         {/* Role Selection Tabs */}
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-2">
-            Select Your Account Type / ভূমিকা নির্বাচন করুন:
+          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2 font-bn">
+            {isBn ? 'ভূমিকা বা অ্যাকাউন্ট টাইপ নির্বাচন করুন:' : 'Select Your Account Type:'}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <button
@@ -601,13 +611,13 @@ const Register = ({ setActivePage }) => {
               onClick={() => setFormData({ ...formData, role: 'patient' })}
               className={`p-3 rounded-2xl border text-center transition-all ${
                 formData.role === 'patient'
-                  ? 'border-cyan-500 bg-cyan-50/80 text-cyan-800 shadow-sm font-bold ring-2 ring-cyan-500/20'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'border-teal-500 bg-teal-50/80 dark:bg-teal-950/50 text-teal-800 dark:text-teal-300 shadow-sm font-bold ring-2 ring-teal-500/20'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
-              <User className="w-4 h-4 mx-auto mb-1 text-cyan-600" />
-              <div className="text-xs font-bold">Patient</div>
-              <span className="text-[10px] font-mono text-cyan-600 block">P01+</span>
+              <User className="w-4 h-4 mx-auto mb-1 text-teal-600 dark:text-teal-400" />
+              <div className="text-xs font-bold font-bn">{isBn ? 'রোগী' : 'Patient'}</div>
+              <span className="text-[10px] font-mono text-teal-600 dark:text-teal-400 block font-bold">P01+</span>
             </button>
 
             <button
@@ -615,13 +625,13 @@ const Register = ({ setActivePage }) => {
               onClick={() => setFormData({ ...formData, role: 'doctor' })}
               className={`p-3 rounded-2xl border text-center transition-all ${
                 formData.role === 'doctor'
-                  ? 'border-purple-500 bg-purple-50/80 text-purple-800 shadow-sm font-bold ring-2 ring-purple-500/20'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'border-purple-500 bg-purple-50/80 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 shadow-sm font-bold ring-2 ring-purple-500/20'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
-              <Stethoscope className="w-4 h-4 mx-auto mb-1 text-purple-600" />
-              <div className="text-xs font-bold">Doctor</div>
-              <span className="text-[10px] font-mono text-purple-600 block">D101+</span>
+              <Stethoscope className="w-4 h-4 mx-auto mb-1 text-purple-600 dark:text-purple-400" />
+              <div className="text-xs font-bold font-bn">{isBn ? 'ডাক্তার' : 'Doctor'}</div>
+              <span className="text-[10px] font-mono text-purple-600 dark:text-purple-400 block font-bold">D101+</span>
             </button>
 
             <button
@@ -629,13 +639,13 @@ const Register = ({ setActivePage }) => {
               onClick={() => setFormData({ ...formData, role: 'lab_staff' })}
               className={`p-3 rounded-2xl border text-center transition-all ${
                 formData.role === 'lab_staff'
-                  ? 'border-blue-500 bg-blue-50/80 text-blue-800 shadow-sm font-bold ring-2 ring-blue-500/20'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'border-sky-500 bg-sky-50/80 dark:bg-sky-950/50 text-sky-800 dark:text-sky-300 shadow-sm font-bold ring-2 ring-sky-500/20'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
-              <FlaskConical className="w-4 h-4 mx-auto mb-1 text-blue-600" />
-              <div className="text-xs font-bold">Lab Staff</div>
-              <span className="text-[10px] font-mono text-blue-600 block">L101+</span>
+              <FlaskConical className="w-4 h-4 mx-auto mb-1 text-sky-600 dark:text-sky-400" />
+              <div className="text-xs font-bold font-bn">{isBn ? 'ল্যাব স্টাফ' : 'Lab Staff'}</div>
+              <span className="text-[10px] font-mono text-sky-600 dark:text-sky-400 block font-bold">L101+</span>
             </button>
 
             <button
@@ -643,26 +653,26 @@ const Register = ({ setActivePage }) => {
               onClick={() => setFormData({ ...formData, role: 'accountant' })}
               className={`p-3 rounded-2xl border text-center transition-all ${
                 formData.role === 'accountant'
-                  ? 'border-emerald-500 bg-emerald-50/80 text-emerald-800 shadow-sm font-bold ring-2 ring-emerald-500/20'
-                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 shadow-sm font-bold ring-2 ring-emerald-500/20'
+                  : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
-              <Landmark className="w-4 h-4 mx-auto mb-1 text-emerald-600" />
-              <div className="text-xs font-bold">Accounts</div>
-              <span className="text-[10px] font-mono text-emerald-600 block">A101+</span>
+              <Landmark className="w-4 h-4 mx-auto mb-1 text-emerald-600 dark:text-emerald-400" />
+              <div className="text-xs font-bold font-bn">{isBn ? 'অ্যাকাউন্টস' : 'Accounts'}</div>
+              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 block font-bold">A101+</span>
             </button>
           </div>
 
           <div className="mt-2 text-center">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${currentRoleInfo.bg} ${currentRoleInfo.text} border ${currentRoleInfo.border}`}>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${currentRoleInfo.bg} ${currentRoleInfo.text} border ${currentRoleInfo.border} font-bn`}>
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>স্বয়ংক্রিয় আইডি জেনারেট হবে: <strong>{currentRoleInfo.prefix}</strong> ফরম্যাটে</span>
+              <span>{isBn ? 'স্বয়ংক্রিয় আইডি বরাদ্দ হবে:' : 'Auto-allocated ID Format:'} <strong className="font-mono">{currentRoleInfo.prefix}</strong></span>
             </span>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2.5">
+          <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5 font-bn">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -670,23 +680,23 @@ const Register = ({ setActivePage }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-slate-400" /> Full Name *
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+              <User className="w-3.5 h-3.5 text-slate-400" /> {isBn ? 'পুরো নাম *' : 'Full Name *'}
             </label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder={formData.role === 'doctor' ? 'e.g. Dr. Sabrina Zaman' : 'e.g. Tanvir Hassan'}
-              className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+              placeholder={formData.role === 'doctor' ? (isBn ? 'যেমন: ডা. সাবরিনা জামান' : 'e.g. Dr. Sabrina Zaman') : (isBn ? 'যেমন: তানভীর হাসান' : 'e.g. Tanvir Hassan')}
+              className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-800 dark:text-slate-100"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-slate-400" /> Email *
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <Mail className="w-3.5 h-3.5 text-slate-400" /> {isBn ? 'ইমেইল ঠিকানা *' : 'Email Address *'}
               </label>
               <input
                 type="email"
@@ -694,13 +704,13 @@ const Register = ({ setActivePage }) => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="name@medicare.com"
-                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-800 dark:text-slate-100"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-slate-400" /> Phone Number *
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <Phone className="w-3.5 h-3.5 text-slate-400" /> {isBn ? 'ফোন নম্বর *' : 'Phone Number *'}
               </label>
               <input
                 type="tel"
@@ -708,34 +718,34 @@ const Register = ({ setActivePage }) => {
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="017xxxxxxxx"
-                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-800 dark:text-slate-100"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-slate-400" /> Present Address (বর্তমান ঠিকানা) *
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+              <MapPin className="w-3.5 h-3.5 text-slate-400" /> {isBn ? 'বর্তমান ঠিকানা *' : 'Present Address *'}
             </label>
             <input
               type="text"
               required
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="e.g. House 14, Road 5, Dhanmondi, Dhaka"
-              className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+              placeholder={isBn ? 'যেমন: বাড়ি ১৪, রোড ৫, ধানমন্ডি, ঢাকা' : 'e.g. House 14, Road 5, Dhanmondi, Dhaka'}
+              className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-800 dark:text-slate-100"
             />
           </div>
 
           {formData.role === 'patient' && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Droplet className="w-3.5 h-3.5 text-slate-400" /> Blood Group
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <Droplet className="w-3.5 h-3.5 text-slate-400" /> {isBn ? 'রক্তের গ্রুপ' : 'Blood Group'}
               </label>
               <select
                 value={formData.blood_group}
                 onChange={(e) => setFormData({ ...formData, blood_group: e.target.value })}
-                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-800 dark:text-slate-100"
               >
                 <option value="A+">A+</option>
                 <option value="A-">A-</option>
@@ -751,53 +761,53 @@ const Register = ({ setActivePage }) => {
 
           {formData.role === 'doctor' && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Stethoscope className="w-3.5 h-3.5 text-purple-600" /> Medical Specialty
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <Stethoscope className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> {isBn ? 'মেডিকেল স্পেশালিটি' : 'Medical Specialty'}
               </label>
               <input
                 type="text"
-                placeholder="e.g. Cardiologist / Neurologist"
+                placeholder={isBn ? 'যেমন: হৃদরোগ বিশেষজ্ঞ / মেডিসিন' : 'e.g. Cardiologist / Neurologist'}
                 value={formData.specialty}
                 onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium"
+                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 font-medium text-slate-800 dark:text-slate-100"
               />
             </div>
           )}
 
           {formData.role === 'lab_staff' && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <FlaskConical className="w-3.5 h-3.5 text-blue-600" /> Lab Specialization / Unit
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <FlaskConical className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" /> {isBn ? 'ল্যাব স্পেশালাইজেশন / বিভাগ' : 'Lab Unit'}
               </label>
               <input
                 type="text"
-                placeholder="e.g. Pathology & Sample Analyst"
+                placeholder={isBn ? 'যেমন: প্যাথলজি ও স্যাম্পল অ্যানালিস্ট' : 'e.g. Pathology & Sample Analyst'}
                 value={formData.specialty}
                 onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-sky-500 font-medium text-slate-800 dark:text-slate-100"
               />
             </div>
           )}
 
           {formData.role === 'accountant' && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Landmark className="w-3.5 h-3.5 text-emerald-600" /> Finance Designation / Section
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <Landmark className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> {isBn ? 'ফিন্যান্স পদবি / শাখা' : 'Finance Section'}
               </label>
               <input
                 type="text"
-                placeholder="e.g. Hospital Billing & Cashier"
+                placeholder={isBn ? 'যেমন: বিলিং অফিসার ও ক্যাশিয়ার' : 'e.g. Hospital Billing & Cashier'}
                 value={formData.specialty}
                 onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                className="w-full text-xs sm:text-sm px-4 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium text-slate-800 dark:text-slate-100"
               />
             </div>
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-400" /> Password *
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <Lock className="w-3.5 h-3.5 text-slate-400" /> {isBn ? 'পাসওয়ার্ড *' : 'Password *'}
               </label>
               <div className="relative">
                 <input
@@ -806,13 +816,13 @@ const Register = ({ setActivePage }) => {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full text-xs sm:text-sm pl-4 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                  className="w-full text-xs sm:text-sm pl-4 pr-11 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-800 dark:text-slate-100"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   title={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -820,8 +830,8 @@ const Register = ({ setActivePage }) => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-400" /> Confirm Password *
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1.5 font-bn">
+                <Lock className="w-3.5 h-3.5 text-slate-400" /> {isBn ? 'পাসওয়ার্ড নিশ্চিতকরণ *' : 'Confirm Password *'}
               </label>
               <div className="relative">
                 <input
@@ -830,13 +840,13 @@ const Register = ({ setActivePage }) => {
                   value={formData.confirm_password}
                   onChange={(e) => setFormData({ ...formData, confirm_password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full text-xs sm:text-sm pl-4 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                  className="w-full text-xs sm:text-sm pl-4 pr-11 py-3 bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium text-slate-800 dark:text-slate-100"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   title={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
                 >
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -847,20 +857,20 @@ const Register = ({ setActivePage }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-cyan-600/25 transition-all text-sm flex items-center justify-center gap-2 mt-4"
+            className="w-full bg-gradient-to-r from-teal-600 to-sky-600 hover:from-teal-700 hover:to-sky-700 active:scale-[0.99] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-500/25 transition-all text-sm flex items-center justify-center gap-2 mt-4 font-bn"
           >
-            <span>{loading ? 'Creating Account & Allocating ID...' : `Register & Generate ID (${currentRoleInfo.prefix})`}</span>
+            <span>{loading ? (isBn ? 'অ্যাকাউন্ট তৈরি হচ্ছে...' : 'Creating Account...') : (isBn ? `রেজিস্ট্রেশন করুন ও আইডি নিন (${currentRoleInfo.prefix})` : `Register & Generate ID (${currentRoleInfo.prefix})`)}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
-          Already have an ID?{' '}
+        <div className="text-center text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800 font-bn">
+          {isBn ? 'পূর্বেই একাউন্ট রয়েছে?' : 'Already have an ID?'}
           <button
             onClick={() => setActivePage('login')}
-            className="text-cyan-600 hover:text-cyan-700 font-bold underline ml-1"
+            className="text-teal-600 dark:text-teal-400 hover:text-teal-700 font-bold underline ml-1"
           >
-            Sign In with ID (P01, D101, L101, A101)
+            {isBn ? 'সরাসরি আইডি দিয়ে সাইন ইন করুন' : 'Sign In with ID'}
           </button>
         </div>
 

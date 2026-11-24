@@ -6,7 +6,7 @@ echo         MediCare Hub - Automated Server Launcher
 echo ========================================================
 echo.
 echo Starting MediCare Hub Frontend Server...
-cd /d "C:\Users\Akramul Hasan\.gemini\antigravity\scratch\medicare-hub\frontend"
+cd /d "%~dp0frontend"
 
 echo.
 echo Launching browser at http://localhost:3000 ...
